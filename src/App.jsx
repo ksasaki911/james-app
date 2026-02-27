@@ -305,13 +305,20 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
   const allDone = done["カット指示"] && done["フェーシング変更"];
 
   return (
-    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto", minHeight: "100vh", background: "linear-gradient(180deg, #F0F4F8 0%, #E2E8F0 100%)" }}>
-      {/* トップバー */}
-      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", borderRadius: 16, padding: "16px 20px", marginBottom: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto", minHeight: "100vh", background: "#0F172A" }}>
+      {/* トップバー - JAMES ブランド */}
+      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", borderRadius: 16, padding: "18px 22px", marginBottom: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.2)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "#FFF", letterSpacing: 2 }}>JIOS</div>
-            <div style={{ fontSize: 10, color: "#64748B", marginTop: 2 }}>店舗発注・棚割管理システム</div>
+            <div style={{ display: "flex", gap: 3, marginBottom: 4 }}>
+              {"JAMES".split("").map((c, i) => (
+                <span key={i} style={{
+                  fontSize: 28, fontWeight: 900, lineHeight: 1,
+                  color: ["#0891B2", "#06B6D4", "#22D3EE", "#67E8F9", "#A5F3FC"][i]
+                }}>{c}</span>
+              ))}
+            </div>
+            <div style={{ fontSize: 9, color: "#475569", letterSpacing: 1.5 }}>J-MARUEI AI MERCHANDISING ENHANCEMENT SYSTEM</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 13, color: "#FFF", fontWeight: 600 }}>{userName}</div>
@@ -324,61 +331,61 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
 
       {/* DCS指示サマリーバー */}
       {totalDcs > 0 && (
-        <div style={{ background: allDone ? "#F0FDF4" : "#FFF", border: `1px solid ${allDone ? "#BBF7D0" : "#E2E8F0"}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+        <div style={{ background: allDone ? "rgba(5,150,105,0.08)" : "rgba(30,41,59,0.7)", border: `1px solid ${allDone ? "rgba(52,211,153,0.3)" : "#334155"}`, borderRadius: 14, padding: "14px 16px", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4A" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#F1F5F9" }}>
               {allDone ? "DCS指示（全作業完了）" : allProcessed ? "DCS指示（処理済・確認待ち）" : "DCS指示（未処理あり）"}
             </div>
             <div style={{ fontSize: 11, color: "#64748B" }}>
               合計 {totalDcs}件
-              {proc.total > 0 && <span style={{ color: "#059669", fontWeight: 600 }}> / 処理済{proc.total}件</span>}
+              {proc.total > 0 && <span style={{ color: "#34D399", fontWeight: 600 }}> / 処理済{proc.total}件</span>}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {cutCount > 0 && (
-              <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: cutRemaining <= 0 ? "#D1FAE5" : "#FEF2F2", border: `1px solid ${cutRemaining <= 0 ? "#A7F3D0" : "#FECACA"}`, borderRadius: 8, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: cutRemaining <= 0 ? "#059669" : "#DC2626" }}>{cutCount}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: cutRemaining <= 0 ? "#065F46" : "#991B1B" }}>カット指示</div>
+              <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: cutRemaining <= 0 ? "rgba(5,150,105,0.1)" : "rgba(220,38,38,0.1)", border: `1px solid ${cutRemaining <= 0 ? "rgba(52,211,153,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 10, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: cutRemaining <= 0 ? "#34D399" : "#F87171" }}>{cutCount}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: cutRemaining <= 0 ? "#34D399" : "#F87171" }}>カット指示</div>
                 {cutRemaining > 0
-                  ? <div style={{ fontSize: 9, color: "#B91C1C", marginTop: 2 }}>残{cutRemaining}件 要対応</div>
+                  ? <div style={{ fontSize: 9, color: "#F87171", marginTop: 2 }}>残{cutRemaining}件 要対応</div>
                   : done["カット指示"]
-                    ? <div style={{ fontSize: 9, color: "#059669", marginTop: 2, fontWeight: 700 }}>作業完了</div>
-                    : <div style={{ fontSize: 9, color: "#059669", marginTop: 2 }}>処理済</div>
+                    ? <div style={{ fontSize: 9, color: "#34D399", marginTop: 2, fontWeight: 700 }}>作業完了</div>
+                    : <div style={{ fontSize: 9, color: "#34D399", marginTop: 2 }}>処理済</div>
                 }
               </div>
             )}
             {faceChangeCount > 0 && (
-              <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: faceRemaining <= 0 ? "#DBEAFE" : "#FFFBEB", border: `1px solid ${faceRemaining <= 0 ? "#BFDBFE" : "#FDE68A"}`, borderRadius: 8, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: faceRemaining <= 0 ? "#2563EB" : "#D97706" }}>{faceChangeCount}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: faceRemaining <= 0 ? "#1E40AF" : "#92400E" }}>フェーシング変更</div>
+              <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: faceRemaining <= 0 ? "rgba(8,145,178,0.1)" : "rgba(251,191,36,0.08)", border: `1px solid ${faceRemaining <= 0 ? "rgba(8,145,178,0.3)" : "rgba(251,191,36,0.25)"}`, borderRadius: 10, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: faceRemaining <= 0 ? "#0891B2" : "#FBBF24" }}>{faceChangeCount}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: faceRemaining <= 0 ? "#06B6D4" : "#FBBF24" }}>フェーシング変更</div>
                 {faceRemaining > 0
-                  ? <div style={{ fontSize: 9, color: "#B45309", marginTop: 2 }}>残{faceRemaining}件 要対応</div>
+                  ? <div style={{ fontSize: 9, color: "#FBBF24", marginTop: 2 }}>残{faceRemaining}件 要対応</div>
                   : done["フェーシング変更"]
-                    ? <div style={{ fontSize: 9, color: "#2563EB", marginTop: 2, fontWeight: 700 }}>作業完了</div>
-                    : <div style={{ fontSize: 9, color: "#2563EB", marginTop: 2 }}>処理済</div>
+                    ? <div style={{ fontSize: 9, color: "#0891B2", marginTop: 2, fontWeight: 700 }}>作業完了</div>
+                    : <div style={{ fontSize: 9, color: "#0891B2", marginTop: 2 }}>処理済</div>
                 }
               </div>
             )}
-            <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 8, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#4F46E5" }}>0</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#3730A3" }}>商品入替</div>
-              <div style={{ fontSize: 9, color: "#4338CA", marginTop: 2 }}>なし</div>
+            <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 10, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#A78BFA" }}>0</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA" }}>商品入替</div>
+              <div style={{ fontSize: 9, color: "#64748B", marginTop: 2 }}>なし</div>
             </div>
           </div>
           {allDone ? (
-            <div style={{ marginTop: 10, background: "#059669", color: "#FFF", borderRadius: 8, padding: "8px 0", fontSize: 12, fontWeight: 700, textAlign: "center" }}>
+            <div style={{ marginTop: 10, background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: "#34D399", borderRadius: 10, padding: "8px 0", fontSize: 12, fontWeight: 700, textAlign: "center" }}>
               全作業完了
             </div>
           ) : (
-            <button onClick={() => onNavigate("category-select-dcs")} style={{ width: "100%", marginTop: 10, background: "#1B2A4A", color: "#FFF", border: "none", borderRadius: 8, padding: "8px 0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={() => onNavigate("category-select-dcs")} style={{ width: "100%", marginTop: 10, background: "linear-gradient(135deg, #0891B2, #06B6D4)", color: "#FFF", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 12px rgba(8,145,178,0.3)" }}>
               {allProcessed ? "確認済にする →" : "DCS提案を確認・処理する →"}
             </button>
           )}
         </div>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B", marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ width: 3, height: 18, background: "#0284C7", borderRadius: 2 }} />
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 3, height: 18, background: "#0891B2", borderRadius: 2 }} />
         MDメニュー
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -393,19 +400,18 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
           { label: "終了", icon: "🚪", desc: "", action: null, color: "#64748B" },
         ].map((item, i) => (
           <button key={i} onClick={item.action} disabled={!item.action} style={{
-            background: item.action ? "#FFF" : "#F8FAFC",
-            border: item.action ? `1px solid #E2E8F0` : "1px solid #F1F5F9",
+            background: item.action ? "rgba(30,41,59,0.7)" : "rgba(30,41,59,0.3)",
+            border: item.action ? `1px solid #334155` : "1px solid rgba(51,65,85,0.3)",
             borderRadius: 14, padding: "16px 14px", cursor: item.action ? "pointer" : "default",
-            textAlign: "left", opacity: item.action ? 1 : 0.4, position: "relative",
-            boxShadow: item.action ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
+            textAlign: "left", opacity: item.action ? 1 : 0.35, position: "relative",
             transition: "all 0.2s", borderLeft: item.action ? `4px solid ${item.color}` : "4px solid transparent"
           }}>
             {item.badge > 0 && (
-              <div style={{ position: "absolute", top: 8, right: 8, background: "#DC2626", color: "#FFF", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 800, minWidth: 20, textAlign: "center", boxShadow: "0 2px 4px rgba(220,38,38,0.3)" }}>{item.badge}</div>
+              <div style={{ position: "absolute", top: 8, right: 8, background: "#DC2626", color: "#FFF", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 800, minWidth: 20, textAlign: "center", boxShadow: "0 2px 8px rgba(220,38,38,0.4)" }}>{item.badge}</div>
             )}
             <div style={{ fontSize: 26, marginBottom: 4 }}>{item.icon}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B" }}>{item.label}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 2, lineHeight: "14px" }}>{item.desc}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#F1F5F9" }}>{item.label}</div>
+            <div style={{ fontSize: 10, color: "#64748B", marginTop: 2, lineHeight: "14px" }}>{item.desc}</div>
           </button>
         ))}
       </div>
@@ -445,6 +451,7 @@ const CategorySelectScreen = ({ onSelect, onBack, showDcs }) => {
         <div style={{ fontSize: 16, fontWeight: 700, color: "#1B2A4A" }}>
           {showDcs ? "DCS指示 — 売場を選択" : "売場を選択"}
         </div>
+        <span style={{ fontSize: 10, fontWeight: 800, color: "#0891B2", letterSpacing: 1, marginLeft: "auto" }}>JAMES</span>
       </div>
 
       {/* DCS モード時：指示サマリー */}
@@ -729,10 +736,14 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           <button onClick={onBack} style={{ ...pillBtnStyle, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", borderRadius: 8, padding: "6px 12px" }}>← 売場</button>
         </div>
         <div style={{ flex: 1, textAlign: "center" }}>
-          <span style={{ color: "#94A3B8", fontSize: 10, fontWeight: 500 }}>什器</span>
-          <span style={{ color: "#FFF", fontWeight: 800, fontSize: 15, marginLeft: 6 }}>
-            {data.fixture}：{data.categoryName}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 900, color: "#0891B2", letterSpacing: 1 }}>JAMES</span>
+            <span style={{ color: "#334155", fontSize: 12 }}>|</span>
+            <span style={{ color: "#94A3B8", fontSize: 10, fontWeight: 500 }}>什器</span>
+            <span style={{ color: "#FFF", fontWeight: 800, fontSize: 15 }}>
+              {data.fixture}：{data.categoryName}
+            </span>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <button onClick={() => setEditMode(!editMode)} style={{
