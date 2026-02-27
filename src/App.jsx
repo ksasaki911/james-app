@@ -305,11 +305,20 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
   const allDone = done["カット指示"] && done["フェーシング変更"];
 
   return (
-    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 13, color: "#64748B" }}>{userName}</div>
-        <div style={{ fontSize: 13, color: "#64748B" }}>
-          {new Date().toLocaleDateString("ja-JP")} {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto", minHeight: "100vh", background: "linear-gradient(180deg, #F0F4F8 0%, #E2E8F0 100%)" }}>
+      {/* トップバー */}
+      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", borderRadius: 16, padding: "16px 20px", marginBottom: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#FFF", letterSpacing: 2 }}>JIOS</div>
+            <div style={{ fontSize: 10, color: "#64748B", marginTop: 2 }}>店舗発注・棚割管理システム</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 13, color: "#FFF", fontWeight: 600 }}>{userName}</div>
+            <div style={{ fontSize: 11, color: "#64748B" }}>
+              {new Date().toLocaleDateString("ja-JP")} {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -368,30 +377,35 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
         </div>
       )}
 
-      <div style={{ fontSize: 18, fontWeight: 700, color: "#1B2A4A", marginBottom: 20 }}>MDメニュー</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B", marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 3, height: 18, background: "#0284C7", borderRadius: 2 }} />
+        MDメニュー
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {[
-          { label: "通常発注", icon: "📦", desc: "棚割ベースの通常発注", action: () => onNavigate("category-select") },
-          { label: "特売発注", icon: "🏷️", desc: "特売・チラシ商品の発注", action: null },
-          { label: "棚割管理", icon: "📐", desc: "棚割の確認・修正", action: () => onNavigate("category-select") },
-          { label: "DCS提案", icon: "🤖", desc: `AIカット/変更提案の承認${allDone ? "（完了）" : proc.total > 0 ? ` (残${totalDcs - proc.total}件)` : ` (${totalDcs}件)`}`, action: () => onNavigate("category-select-dcs"), badge: allDone ? 0 : totalDcs - proc.total },
-          { label: "商品台帳", icon: "📋", desc: "商品マスタ参照", action: null },
-          { label: "企画販促", icon: "📢", desc: "販促企画の確認", action: null },
-          { label: "販売支援", icon: "💬", desc: "接客・販売サポート", action: null },
-          { label: "終了", icon: "🚪", desc: "", action: null },
+          { label: "通常発注", icon: "📦", desc: "棚割ベースの通常発注", action: () => onNavigate("category-select"), color: "#0284C7" },
+          { label: "特売発注", icon: "🏷️", desc: "特売・チラシ商品の発注", action: null, color: "#7C3AED" },
+          { label: "棚割管理", icon: "📐", desc: "棚割の確認・修正", action: () => onNavigate("category-select"), color: "#059669" },
+          { label: "DCS提案", icon: "🤖", desc: `AI提案の承認${allDone ? "（完了）" : proc.total > 0 ? ` (残${totalDcs - proc.total}件)` : ` (${totalDcs}件)`}`, action: () => onNavigate("category-select-dcs"), badge: allDone ? 0 : totalDcs - proc.total, color: "#DC2626" },
+          { label: "商品台帳", icon: "📋", desc: "商品マスタ参照", action: null, color: "#64748B" },
+          { label: "企画販促", icon: "📢", desc: "販促企画の確認", action: null, color: "#D97706" },
+          { label: "販売支援", icon: "💬", desc: "接客・販売サポート", action: null, color: "#64748B" },
+          { label: "終了", icon: "🚪", desc: "", action: null, color: "#64748B" },
         ].map((item, i) => (
           <button key={i} onClick={item.action} disabled={!item.action} style={{
-            background: item.action ? "#FFF" : "#F1F5F9", border: "1px solid #E2E8F0",
-            borderRadius: 12, padding: "16px 12px", cursor: item.action ? "pointer" : "default",
-            textAlign: "left", opacity: item.action ? 1 : 0.5, position: "relative",
-            boxShadow: item.action ? "0 1px 3px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s"
+            background: item.action ? "#FFF" : "#F8FAFC",
+            border: item.action ? `1px solid #E2E8F0` : "1px solid #F1F5F9",
+            borderRadius: 14, padding: "16px 14px", cursor: item.action ? "pointer" : "default",
+            textAlign: "left", opacity: item.action ? 1 : 0.4, position: "relative",
+            boxShadow: item.action ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
+            transition: "all 0.2s", borderLeft: item.action ? `4px solid ${item.color}` : "4px solid transparent"
           }}>
             {item.badge > 0 && (
-              <div style={{ position: "absolute", top: 8, right: 8, background: "#DC2626", color: "#FFF", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontWeight: 700, minWidth: 20, textAlign: "center" }}>{item.badge}</div>
+              <div style={{ position: "absolute", top: 8, right: 8, background: "#DC2626", color: "#FFF", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 800, minWidth: 20, textAlign: "center", boxShadow: "0 2px 4px rgba(220,38,38,0.3)" }}>{item.badge}</div>
             )}
-            <div style={{ fontSize: 28, marginBottom: 6 }}>{item.icon}</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1B2A4A" }}>{item.label}</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{item.desc}</div>
+            <div style={{ fontSize: 26, marginBottom: 4 }}>{item.icon}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B" }}>{item.label}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 2, lineHeight: "14px" }}>{item.desc}</div>
           </button>
         ))}
       </div>
@@ -399,27 +413,103 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
   );
 };
 
-const CategorySelectScreen = ({ onSelect, onBack }) => {
+// DCS提案をカテゴリ別に集計するユーティリティ
+const getDcsSummaryByCategory = () => {
+  const summary = {};
+  // DCS_PROPOSALSの各提案のJANコードからカテゴリを特定
+  // 現在はSHELF_DATA_111のみなのでカテゴリ111に紐づけ
+  const allProducts = SHELF_DATA_111.products;
+  DCS_PROPOSALS.forEach(prop => {
+    const product = allProducts.find(p => p.jan === prop.jan);
+    if (product) {
+      const catId = SHELF_DATA_111.category;
+      if (!summary[catId]) summary[catId] = { cut: 0, faceChange: 0, swap: 0, total: 0, items: [] };
+      if (prop.action === "カット") summary[catId].cut++;
+      else if (prop.action === "フェース減" || prop.action === "フェース増") summary[catId].faceChange++;
+      summary[catId].total++;
+      summary[catId].items.push({ ...prop, productName: product.name });
+    }
+  });
+  return summary;
+};
+
+const CategorySelectScreen = ({ onSelect, onBack, showDcs }) => {
   const grouped = {};
   CATEGORIES.forEach(c => { if (!grouped[c.group]) grouped[c.group] = []; grouped[c.group].push(c); });
+  const dcsSummary = showDcs ? getDcsSummaryByCategory() : {};
+
   return (
     <div style={{ padding: 16, maxWidth: 600, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <button onClick={onBack} style={backBtnStyle}>← TOP</button>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#1B2A4A" }}>売場を選択</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#1B2A4A" }}>
+          {showDcs ? "DCS指示 — 売場を選択" : "売場を選択"}
+        </div>
       </div>
+
+      {/* DCS モード時：指示サマリー */}
+      {showDcs && Object.keys(dcsSummary).length > 0 && (
+        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>未処理のDCS指示があるカテゴリ</div>
+          <div style={{ fontSize: 11, color: "#B45309" }}>
+            対象カテゴリにバッジが表示されています。タップして確認・処理してください。
+          </div>
+        </div>
+      )}
+
       {Object.entries(grouped).map(([group, cats]) => (
         <div key={group} style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0891B2", marginBottom: 6, paddingLeft: 4 }}>{group}</div>
-          {cats.map(c => (
-            <button key={c.id} onClick={() => onSelect(c.id)} style={{
-              display: "block", width: "100%", textAlign: "left", padding: "12px 14px", background: "#FFF",
-              border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 6, cursor: "pointer", fontSize: 14, color: "#1B2A4A",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)"
-            }}>
-              <span style={{ color: "#94A3B8", marginRight: 8 }}>{c.id}:</span>{c.name}
-            </button>
-          ))}
+          {cats.map(c => {
+            const dcs = dcsSummary[c.id];
+            const hasDcs = showDcs && dcs && dcs.total > 0;
+            return (
+              <button key={c.id} onClick={() => onSelect(c.id)} style={{
+                display: "block", width: "100%", textAlign: "left", padding: "12px 14px",
+                background: hasDcs ? "#FFF7ED" : "#FFF",
+                border: hasDcs ? "2px solid #FB923C" : "1px solid #E2E8F0",
+                borderRadius: 8, marginBottom: 6, cursor: "pointer", fontSize: 14, color: "#1B2A4A",
+                boxShadow: hasDcs ? "0 2px 8px rgba(251,146,60,0.15)" : "0 1px 2px rgba(0,0,0,0.04)",
+                transition: "all 0.15s"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <span style={{ color: "#94A3B8", marginRight: 8 }}>{c.id}:</span>{c.name}
+                  </div>
+                  {hasDcs && (
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                      {dcs.cut > 0 && (
+                        <span style={{ background: "#DC2626", color: "#FFF", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>
+                          カット {dcs.cut}件
+                        </span>
+                      )}
+                      {dcs.faceChange > 0 && (
+                        <span style={{ background: "#D97706", color: "#FFF", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>
+                          F変更 {dcs.faceChange}件
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {hasDcs && (
+                  <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {dcs.items.slice(0, 4).map((item, i) => (
+                      <span key={i} style={{
+                        fontSize: 9, padding: "2px 6px", borderRadius: 4,
+                        background: item.action === "カット" ? "#FEE2E2" : item.action === "フェース増" ? "#DBEAFE" : "#FEF3C7",
+                        color: item.action === "カット" ? "#991B1B" : item.action === "フェース増" ? "#1E40AF" : "#92400E"
+                      }}>
+                        {item.action}: {item.productName.length > 10 ? item.productName.slice(0, 10) + "…" : item.productName}
+                      </span>
+                    ))}
+                    {dcs.items.length > 4 && (
+                      <span style={{ fontSize: 9, color: "#94A3B8", padding: "2px 4px" }}>他{dcs.items.length - 4}件</span>
+                    )}
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       ))}
     </div>
@@ -633,25 +723,39 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#F0F4F8" }}>
       {/* Header */}
-      <div style={{ background: "#1B2A4A", padding: "8px 12px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
-        <button onClick={onHome} style={{ ...pillBtnStyle, background: "#334155" }}>TOP</button>
-        <button onClick={onBack} style={{ ...pillBtnStyle, background: "#334155" }}>← 売場</button>
-        <div style={{ flex: 1, textAlign: "center", color: "#FFF", fontWeight: 700, fontSize: 14 }}>
-          {data.fixture}：{data.categoryName}
+      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap", borderBottom: "2px solid #0284C7" }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={onHome} style={{ ...pillBtnStyle, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", borderRadius: 8, padding: "6px 12px" }}>TOP</button>
+          <button onClick={onBack} style={{ ...pillBtnStyle, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", borderRadius: 8, padding: "6px 12px" }}>← 売場</button>
         </div>
-        <button onClick={() => setEditMode(!editMode)} style={{
-          ...pillBtnStyle, background: editMode ? "#F59E0B" : "#334155",
-          color: editMode ? "#1B2A4A" : "#CBD5E1", fontWeight: editMode ? 700 : 400
-        }}>{editMode ? "編集中" : "棚割編集"}</button>
-        <button onClick={() => setShowDcsPanel(!showDcsPanel)} style={{
-          ...pillBtnStyle, background: showDcsPanel ? "#028090" : "#334155",
-          color: "#FFF", fontWeight: showDcsPanel ? 700 : 400
-        }}>DCS{dcsProposals.length > 0 ? ` (${dcsProposals.length})` : ""}</button>
-        {totalOrders > 0 && (
-          <div style={{ background: "#0891B2", color: "#FFF", borderRadius: 16, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
-            発注 {totalOrders}品/{totalQty}個
-          </div>
-        )}
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <span style={{ color: "#94A3B8", fontSize: 10, fontWeight: 500 }}>什器</span>
+          <span style={{ color: "#FFF", fontWeight: 800, fontSize: 15, marginLeft: 6 }}>
+            {data.fixture}：{data.categoryName}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button onClick={() => setEditMode(!editMode)} style={{
+            border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: 700, transition: "all 0.2s",
+            background: editMode ? "linear-gradient(135deg, #F59E0B, #D97706)" : "rgba(255,255,255,0.1)",
+            color: editMode ? "#FFF" : "#CBD5E1"
+          }}>{editMode ? "編集中" : "棚割編集"}</button>
+          <button onClick={() => setShowDcsPanel(!showDcsPanel)} style={{
+            border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: 700, transition: "all 0.2s",
+            background: showDcsPanel ? "linear-gradient(135deg, #0284C7, #0369A1)" : "rgba(255,255,255,0.1)",
+            color: "#FFF", position: "relative"
+          }}>
+            DCS
+            {dcsProposals.length > 0 && (
+              <span style={{ position: "absolute", top: -4, right: -4, background: "#DC2626", color: "#FFF", borderRadius: 8, padding: "1px 5px", fontSize: 9, fontWeight: 800, minWidth: 16, textAlign: "center" }}>{dcsProposals.length}</span>
+            )}
+          </button>
+          {totalOrders > 0 && (
+            <div style={{ background: "linear-gradient(135deg, #0284C7, #0891B2)", color: "#FFF", borderRadius: 20, padding: "5px 14px", fontSize: 12, fontWeight: 700, boxShadow: "0 2px 8px rgba(8,145,178,0.3)" }}>
+              発注 {totalOrders}品/{totalQty}個
+            </div>
+          )}
+        </div>
       </div>
 
       {/* DCS指示サマリーバー */}
@@ -808,16 +912,47 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       </div>
 
       {/* Footer */}
-      <div style={{ background: "#1B2A4A", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-        <div style={{ color: "#94A3B8", fontSize: 11 }}>
-          全{products.length}SKU　|　不足: {products.filter(p => p.currentStock <= p.orderPoint).length}品
-          {deletedProducts.length > 0 && <span style={{ color: "#D63031" }}>　|　カット: {deletedProducts.length}品</span>}
-          {changeLog.length > 0 && <span style={{ color: "#F59E0B" }}>　|　変更: {changeLog.length}件</span>}
+      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, borderTop: "1px solid #334155" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 10, color: "#64748B" }}>SKU</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#FFF" }}>{products.length}</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: "#334155" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 10, color: "#64748B" }}>不足</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: products.filter(p => p.currentStock <= p.orderPoint).length > 0 ? "#F87171" : "#10B981" }}>
+              {products.filter(p => p.currentStock <= p.orderPoint).length}
+            </span>
+          </div>
+          {deletedProducts.length > 0 && (
+            <>
+              <div style={{ width: 1, height: 16, background: "#334155" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 10, color: "#64748B" }}>カット</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#F87171" }}>{deletedProducts.length}</span>
+              </div>
+            </>
+          )}
+          {changeLog.length > 0 && (
+            <>
+              <div style={{ width: 1, height: 16, background: "#334155" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 10, color: "#64748B" }}>変更</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#FBBF24" }}>{changeLog.length}</span>
+              </div>
+            </>
+          )}
         </div>
         <button style={{
-          background: totalOrders > 0 ? "#0891B2" : "#334155", color: "#FFF", border: "none", borderRadius: 8,
-          padding: "8px 24px", fontWeight: 700, fontSize: 13, cursor: totalOrders > 0 ? "pointer" : "default"
-        }}>発注確定（{totalOrders}品/{totalQty}個）</button>
+          background: totalOrders > 0 ? "linear-gradient(135deg, #0284C7, #0891B2)" : "#334155",
+          color: "#FFF", border: "none", borderRadius: 10,
+          padding: "10px 28px", fontWeight: 700, fontSize: 14, cursor: totalOrders > 0 ? "pointer" : "default",
+          boxShadow: totalOrders > 0 ? "0 4px 12px rgba(8,145,178,0.3)" : "none",
+          transition: "all 0.2s"
+        }}>
+          発注確定（{totalOrders}品/{totalQty}個）
+        </button>
       </div>
 
       {/* Dialogs */}
@@ -829,172 +964,215 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
 };
 
 // ============================================================
-// SHELF GRID - mm幅ベースの物理制約レイアウト + カット機能
+// SHELF GRID - ゴンドラ什器風 リアルレイアウト
 // ============================================================
 const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights }) => {
   const rows = [1, 2, 3, 4];
   const totalShelfMm = shelfWidthMm || 900;
   const rh = rowHeights || { 1: 280, 2: 300, 3: 280, 4: 320 };
-  // 棚高さ → ピクセル変換 （最大段高320mm → 130px）
-  const mmToPx = (mm) => Math.round((mm / 320) * 130);
+  const mmToPx = (mm) => Math.round((mm / 320) * 140);
+
+  // 段ラベルの名前
+  const rowLabels = { 1: "上段", 2: "中上段", 3: "中下段", 4: "下段" };
 
   return (
-    <div>
-      {rows.map(row => {
-        const rowProducts = products.filter(p => p.row === row);
-        const usedMm = calcRowWidth(products, row);
-        const freeMm = totalShelfMm - usedMm;
-        const overflowing = freeMm < 0;
-        const freePercent = Math.max(0, (freeMm / totalShelfMm) * 100);
+    <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+      {/* ゴンドラヘッダー */}
+      <div style={{ background: "linear-gradient(135deg, #1E293B 0%, #334155 100%)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 4, background: "#10B981" }} />
+          <span style={{ color: "#FFF", fontSize: 12, fontWeight: 700 }}>ゴンドラ什器</span>
+          <span style={{ color: "#94A3B8", fontSize: 11 }}>{totalShelfMm}mm幅 × {rows.length}段</span>
+        </div>
+        <div style={{ color: "#64748B", fontSize: 10 }}>
+          {products.length} SKU
+        </div>
+      </div>
 
-        return (
-          <div key={row} style={{ marginBottom: 4 }}>
-            {/* Row width indicator */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 2, marginLeft: 28 }}>
-              <div style={{ flex: 1, height: 6, background: "#E2E8F0", borderRadius: 3, position: "relative", overflow: "hidden" }}>
-                <div style={{
-                  height: 6, borderRadius: 3, transition: "width 0.3s",
-                  width: `${Math.min(100, (usedMm / totalShelfMm) * 100)}%`,
-                  background: overflowing ? "#EF4444" : freeMm < 50 ? "#F59E0B" : "#10B981"
-                }} />
+      {/* 棚本体 */}
+      <div style={{ padding: "0 2px", background: "linear-gradient(180deg, #F8FAFC 0%, #EFF3F8 100%)" }}>
+        {rows.map(row => {
+          const rowProducts = products.filter(p => p.row === row);
+          const usedMm = calcRowWidth(products, row);
+          const freeMm = totalShelfMm - usedMm;
+          const overflowing = freeMm < 0;
+          const freePercent = Math.max(0, (freeMm / totalShelfMm) * 100);
+          const fillPct = Math.min(100, (usedMm / totalShelfMm) * 100);
+
+          return (
+            <div key={row}>
+              {/* 段ヘッダー */}
+              <div style={{ display: "flex", alignItems: "center", padding: "6px 10px 2px", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 70 }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "#1E293B" }}>{row}</span>
+                  <span style={{ fontSize: 10, color: "#64748B", fontWeight: 500 }}>{rowLabels[row]}</span>
+                  <span style={{ fontSize: 9, color: "#94A3B8" }}>{rh[row]}mm</span>
+                </div>
+                {/* 使用率バー */}
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ flex: 1, height: 4, background: "#E2E8F0", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{
+                      height: 4, borderRadius: 2, transition: "width 0.3s",
+                      width: `${fillPct}%`,
+                      background: overflowing ? "#EF4444" : freeMm < 50 ? "#F59E0B" : "#10B981"
+                    }} />
+                  </div>
+                  <span style={{
+                    fontSize: 9, whiteSpace: "nowrap", fontWeight: 600,
+                    color: overflowing ? "#EF4444" : freeMm < 50 ? "#D97706" : "#64748B"
+                  }}>
+                    {overflowing ? `${Math.abs(freeMm)}mm超過` : `空${freeMm}mm`}
+                  </span>
+                </div>
               </div>
-              <span style={{ fontSize: 9, color: overflowing ? "#EF4444" : freeMm < 50 ? "#F59E0B" : "#94A3B8", marginLeft: 6, whiteSpace: "nowrap", fontWeight: overflowing || freeMm < 50 ? 700 : 400 }}>
-                {overflowing
-                  ? `${usedMm}/${totalShelfMm}mm ${Math.abs(freeMm)}mm超過!`
-                  : `${usedMm}/${totalShelfMm}mm 空${freeMm}mm`}
-              </span>
-            </div>
 
-            <div style={{ display: "flex", alignItems: "flex-end" }}>
-              <div style={{ width: 28, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", fontSize: 9, color: "#94A3B8", fontWeight: 600, paddingBottom: 4 }}>
-                <span style={{ fontSize: 11 }}>{row}段</span>
-                <span style={{ fontSize: 8 }}>{rh[row]}mm</span>
-              </div>
-              <div style={{ flex: 1, display: "flex", gap: 3, alignItems: "flex-end" }}>
-                {rowProducts.map((p, idx) => {
-                  const cellWidthMm = (p.width_mm || 90) * p.face;
-                  const widthPercent = (cellWidthMm / totalShelfMm) * 100;
-                  const rowH = rh[row] || 300;
-                  const prodH = p.height_mm || 200;
-                  const maxStack = calcMaxStack(prodH, rowH);
-                  const cellHeightPx = mmToPx(rowH);
-                  const prodHeightPct = Math.min(100, (prodH / rowH) * 100);
-                  const isSelected = selected?.jan === p.jan;
-                  const isLow = p.currentStock <= p.orderPoint;
-                  const isDragging = dragItem?.jan === p.jan;
-                  const dcsProposal = DCS_PROPOSALS.find(d => d.jan === p.jan);
-                  const isCutOrReduce = dcsProposal && (dcsProposal.action === "カット" || dcsProposal.action === "フェース減");
-                  const isIncrease = dcsProposal && dcsProposal.action === "フェース増";
+              {/* 商品セル */}
+              <div style={{ display: "flex", padding: "0 6px 0 6px", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, display: "flex", gap: 2, alignItems: "flex-end" }}>
+                  {rowProducts.map((p, idx) => {
+                    const cellWidthMm = (p.width_mm || 90) * p.face;
+                    const widthPercent = (cellWidthMm / totalShelfMm) * 100;
+                    const rowH = rh[row] || 300;
+                    const prodH = p.height_mm || 200;
+                    const maxStack = calcMaxStack(prodH, rowH);
+                    const cellHeightPx = mmToPx(rowH);
+                    const prodHeightPct = Math.min(100, (prodH / rowH) * 100);
+                    const isSelected = selected?.jan === p.jan;
+                    const isLow = p.currentStock <= p.orderPoint;
+                    const isDragging = dragItem?.jan === p.jan;
+                    const dcsProposal = DCS_PROPOSALS.find(d => d.jan === p.jan);
+                    const isCutOrReduce = dcsProposal && (dcsProposal.action === "カット" || dcsProposal.action === "フェース減");
+                    const isIncrease = dcsProposal && dcsProposal.action === "フェース増";
 
-                  return (
-                    <div key={p.jan}
-                      draggable={editMode}
-                      onDragStart={editMode ? () => onDragStart(p) : undefined}
-                      onDragOver={editMode ? e => e.preventDefault() : undefined}
-                      onDrop={editMode ? () => onDrop(row, idx) : undefined}
-                      onClick={() => onSelect(p)}
-                      style={{
-                        position: "relative", height: cellHeightPx,
-                        width: `${widthPercent}%`, minWidth: 50, flexShrink: 0,
-                        background: isDragging ? "#FEF3C7" : isSelected ? "#DBEAFE" : p.color || "#FFF",
-                        border: isSelected ? "2px solid #0891B2" : isCutOrReduce ? "2px solid #D63031" : isIncrease ? "2px solid #2563EB" : isLow ? "2px solid #FCA5A5" : "1px solid #E2E8F0",
-                        borderRadius: 6, cursor: editMode ? "grab" : "pointer", padding: 4, textAlign: "left",
-                        boxShadow: isSelected ? "0 0 0 2px rgba(8,145,178,0.2)" : "none",
-                        transition: "all 0.15s", overflow: "hidden", opacity: isDragging ? 0.5 : 1
-                      }}>
-                      {/* 商品高さバー（左端に縦バーで高さを表現） */}
-                      <div style={{
-                        position: "absolute", left: 1, bottom: 1, width: 3, borderRadius: 2,
-                        height: `${prodHeightPct}%`, background: maxStack >= 3 ? "#10B981" : maxStack >= 2 ? "#0891B2" : "#CBD5E1",
-                        opacity: 0.6
-                      }} />
-                      {maxStack > 1 && (
-                        <span style={{ position: "absolute", left: 6, bottom: 2, fontSize: 7, color: "#0891B2", fontWeight: 700 }}>×{maxStack}</span>
-                      )}
-                      {/* DCS カット/フェース減 → 赤い斜線網掛け */}
-                      {isCutOrReduce && (
-                        <div style={{
-                          position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 5, zIndex: 2, pointerEvents: "none",
-                          background: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(214,48,49,0.25) 4px, rgba(214,48,49,0.25) 6px)"
+                    return (
+                      <div key={p.jan}
+                        draggable={editMode}
+                        onDragStart={editMode ? () => onDragStart(p) : undefined}
+                        onDragOver={editMode ? e => e.preventDefault() : undefined}
+                        onDrop={editMode ? () => onDrop(row, idx) : undefined}
+                        onClick={() => onSelect(p)}
+                        style={{
+                          position: "relative", height: cellHeightPx,
+                          width: `${widthPercent}%`, minWidth: 54, flexShrink: 0,
+                          background: isDragging ? "#FEF3C7" : isSelected ? "linear-gradient(180deg, #DBEAFE 0%, #EFF6FF 100%)" : "linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)",
+                          border: isSelected ? "2px solid #0284C7" : isCutOrReduce ? "2px solid #DC2626" : isIncrease ? "2px solid #2563EB" : isLow ? "2px solid #F87171" : "1px solid #E2E8F0",
+                          borderRadius: 8, cursor: editMode ? "grab" : "pointer", padding: "4px 5px", textAlign: "left",
+                          boxShadow: isSelected ? "0 0 0 3px rgba(2,132,199,0.15), 0 4px 12px rgba(0,0,0,0.1)" : "0 1px 3px rgba(0,0,0,0.06)",
+                          transition: "all 0.2s ease", overflow: "hidden", opacity: isDragging ? 0.4 : 1
                         }}>
-                          <div style={{
-                            position: "absolute", bottom: 2, left: 2, right: 2, background: "rgba(214,48,49,0.9)",
-                            color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 3, padding: "1px 0", letterSpacing: 0.5
-                          }}>{dcsProposal.action === "カット" ? "DCS:カット" : "DCS:F減"}</div>
-                        </div>
-                      )}
-                      {/* DCS フェース増 → 青い斜線網掛け */}
-                      {isIncrease && (
+                        {/* 商品高さバー */}
                         <div style={{
-                          position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 5, zIndex: 2, pointerEvents: "none",
-                          background: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(37,99,235,0.18) 4px, rgba(37,99,235,0.18) 6px)"
-                        }}>
+                          position: "absolute", left: 1, bottom: 1, width: 3, borderRadius: 2,
+                          height: `${prodHeightPct}%`,
+                          background: maxStack >= 3 ? "#10B981" : maxStack >= 2 ? "#0891B2" : "#CBD5E1",
+                          opacity: 0.5
+                        }} />
+                        {maxStack > 1 && (
+                          <span style={{ position: "absolute", left: 6, bottom: 2, fontSize: 7, color: "#0891B2", fontWeight: 700, opacity: 0.8 }}>×{maxStack}</span>
+                        )}
+                        {/* DCS カット/フェース減 */}
+                        {isCutOrReduce && (
                           <div style={{
-                            position: "absolute", bottom: 2, left: 2, right: 2, background: "rgba(37,99,235,0.9)",
-                            color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 3, padding: "1px 0", letterSpacing: 0.5
-                          }}>DCS:F増→{dcsProposal.newFace}</div>
-                        </div>
-                      )}
-                      <RankBadge rank={p.rank} />
-                      <TagBadge tag={p.tag} />
-                      <div style={{ marginTop: 20, fontSize: 10, color: "#1B2A4A", fontWeight: 600, lineHeight: "13px", overflow: "hidden", height: 26 }}>
-                        {p.name.length > (p.face > 1 ? 20 : 10) ? p.name.slice(0, p.face > 1 ? 20 : 10) + "…" : p.name}
-                      </div>
-                      <div style={{ fontSize: 8, color: "#94A3B8", letterSpacing: 0.3, marginTop: -1 }}>{p.jan.slice(-4)}</div>
-                      <StockBar current={p.currentStock} base={p.baseStock} orderPoint={p.orderPoint} />
-                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                        <span style={{ fontSize: 8, color: "#64748B" }}>在庫{p.currentStock}</span>
-                        {p.orderQty > 0 && <span style={{ fontSize: 9, fontWeight: 800, color: "#0891B2" }}>発注{p.orderQty}</span>}
-                      </div>
-                      {/* Facing bar & edit + mm width display */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 1 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: "#0891B2" }}>F:{p.face} <span style={{ fontSize: 8, color: "#94A3B8", fontWeight: 400 }}>{cellWidthMm}mm</span></span>
-                        {editMode && (
-                          <div style={{ display: "flex", gap: 2 }} onClick={e => e.stopPropagation()}>
-                            <button onClick={e => { e.stopPropagation(); onFaceChange(p.jan, p.face - 1); }}
-                              style={{ width: 16, height: 16, fontSize: 10, border: "1px solid #CBD5E1", borderRadius: 3, background: p.face <= 1 ? "#FEF2F2" : "#FFF", cursor: "pointer", padding: 0, lineHeight: "14px", color: p.face <= 1 ? "#D63031" : "#1B2A4A" }}>−</button>
-                            <button onClick={e => { e.stopPropagation(); onFaceChange(p.jan, p.face + 1); }}
-                              style={{ width: 16, height: 16, fontSize: 10, border: "1px solid #CBD5E1", borderRadius: 3, background: "#FFF", cursor: "pointer", padding: 0, lineHeight: "14px" }}>+</button>
-                            <button onClick={e => { e.stopPropagation(); onDelete(p.jan); }}
-                              style={{ width: 16, height: 16, fontSize: 10, border: "1px solid #D63031", borderRadius: 3, background: "#FEF2F2", cursor: "pointer", padding: 0, lineHeight: "14px", color: "#D63031" }}>×</button>
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 7, zIndex: 2, pointerEvents: "none",
+                            background: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(220,38,38,0.2) 4px, rgba(220,38,38,0.2) 6px)"
+                          }}>
+                            <div style={{
+                              position: "absolute", bottom: 3, left: 3, right: 3, background: "#DC2626",
+                              color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 4, padding: "2px 0", letterSpacing: 0.5
+                            }}>{dcsProposal.action === "カット" ? "カット" : "F減"}</div>
                           </div>
                         )}
+                        {/* DCS フェース増 */}
+                        {isIncrease && (
+                          <div style={{
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 7, zIndex: 2, pointerEvents: "none",
+                            background: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(37,99,235,0.15) 4px, rgba(37,99,235,0.15) 6px)"
+                          }}>
+                            <div style={{
+                              position: "absolute", bottom: 3, left: 3, right: 3, background: "#2563EB",
+                              color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 4, padding: "2px 0", letterSpacing: 0.5
+                            }}>F増→{dcsProposal.newFace}</div>
+                          </div>
+                        )}
+                        <RankBadge rank={p.rank} />
+                        <TagBadge tag={p.tag} />
+                        <div style={{ marginTop: 20, fontSize: 10, color: "#1E293B", fontWeight: 600, lineHeight: "13px", overflow: "hidden", height: 26 }}>
+                          {p.name.length > (p.face > 1 ? 20 : 10) ? p.name.slice(0, p.face > 1 ? 20 : 10) + "…" : p.name}
+                        </div>
+                        <div style={{ fontSize: 8, color: "#94A3B8", letterSpacing: 0.3, marginTop: -1 }}>{p.jan.slice(-4)}</div>
+                        <StockBar current={p.currentStock} base={p.baseStock} orderPoint={p.orderPoint} />
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2, alignItems: "center" }}>
+                          <span style={{ fontSize: 8, color: isLow ? "#DC2626" : "#64748B", fontWeight: isLow ? 700 : 400 }}>在庫{p.currentStock}</span>
+                          {p.orderQty > 0 && (
+                            <span style={{ fontSize: 9, fontWeight: 800, color: "#FFF", background: "#0284C7", borderRadius: 3, padding: "0 4px" }}>
+                              {p.orderQty}
+                            </span>
+                          )}
+                        </div>
+                        {/* Facing bar & edit */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 1 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#0284C7" }}>
+                            F:{p.face}
+                            <span style={{ fontSize: 8, color: "#94A3B8", fontWeight: 400, marginLeft: 2 }}>{cellWidthMm}mm</span>
+                          </span>
+                          {editMode && (
+                            <div style={{ display: "flex", gap: 1 }} onClick={e => e.stopPropagation()}>
+                              <button onClick={e => { e.stopPropagation(); onFaceChange(p.jan, p.face - 1); }}
+                                style={{ width: 18, height: 18, fontSize: 11, border: "1px solid #CBD5E1", borderRadius: 4, background: p.face <= 1 ? "#FEF2F2" : "#FFF", cursor: "pointer", padding: 0, lineHeight: "16px", color: p.face <= 1 ? "#DC2626" : "#1E293B", fontWeight: 600 }}>−</button>
+                              <button onClick={e => { e.stopPropagation(); onFaceChange(p.jan, p.face + 1); }}
+                                style={{ width: 18, height: 18, fontSize: 11, border: "1px solid #CBD5E1", borderRadius: 4, background: "#FFF", cursor: "pointer", padding: 0, lineHeight: "16px", fontWeight: 600 }}>+</button>
+                              <button onClick={e => { e.stopPropagation(); onDelete(p.jan); }}
+                                style={{ width: 18, height: 18, fontSize: 11, border: "1px solid #DC2626", borderRadius: 4, background: "#FEF2F2", cursor: "pointer", padding: 0, lineHeight: "16px", color: "#DC2626", fontWeight: 600 }}>×</button>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                    );
+                  })}
+                  {/* Free space */}
+                  {freeMm > 0 && (
+                    <div style={{
+                      width: `${freePercent}%`, minWidth: 30, height: mmToPx(rh[row] || 300),
+                      background: editMode && dragItem ? "linear-gradient(180deg, #DBEAFE 0%, #EFF6FF 100%)" : "linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)",
+                      borderRadius: 8,
+                      border: editMode && dragItem ? "2px dashed #0284C7" : "1px dashed #D1D5DB",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 9, color: editMode && dragItem ? "#0284C7" : "#CBD5E1", flexShrink: 0, fontWeight: 500
+                    }}
+                      onDragOver={editMode ? e => e.preventDefault() : undefined}
+                      onDrop={editMode ? () => onDrop(row, rowProducts.length) : undefined}
+                    >
+                      {editMode && dragItem ? "ドロップ" : `${freeMm}mm`}
                     </div>
-                  );
-                })}
-                {/* Free space visualization */}
-                {freeMm > 0 && (
-                  <div style={{
-                    width: `${freePercent}%`, minWidth: 30, height: mmToPx(rh[row] || 300),
-                    background: editMode && dragItem ? "#DBEAFE" : "#F8FAFC",
-                    borderRadius: 6, border: editMode && dragItem ? "2px dashed #0891B2" : "1px dashed #E2E8F0",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 9, color: "#CBD5E1", flexShrink: 0
-                  }}
-                    onDragOver={editMode ? e => e.preventDefault() : undefined}
-                    onDrop={editMode ? () => onDrop(row, rowProducts.length) : undefined}
-                  >
-                    {editMode && dragItem ? "ここに配置" : `${freeMm}mm`}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+              {/* 棚板（ゴンドラ什器の棚線） */}
+              <div style={{ margin: "0 6px", height: 4, background: "linear-gradient(180deg, #94A3B8 0%, #CBD5E1 100%)", borderRadius: "0 0 2px 2px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }} />
             </div>
-            <div style={{ marginLeft: 28, height: 3, background: overflowing ? "#EF4444" : "#CBD5E1", borderRadius: 1, marginTop: 1 }} />
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
-      {/* Deleted products section */}
+      {/* カット済み商品 */}
       {deletedProducts.length > 0 && (
-        <div style={{ marginTop: 16, padding: "10px 12px", background: "#FFF5F5", borderRadius: 8, border: "1px solid #FCA5A5" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#D63031", marginBottom: 6 }}>カット済み商品（{deletedProducts.length}品）</div>
+        <div style={{ margin: "0 12px 12px", padding: "10px 14px", background: "linear-gradient(135deg, #FFF5F5 0%, #FEF2F2 100%)", borderRadius: 8, border: "1px solid #FECACA" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#DC2626", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+            <span>カット済み商品</span>
+            <span style={{ background: "#DC2626", color: "#FFF", borderRadius: 10, padding: "1px 8px", fontSize: 10 }}>{deletedProducts.length}</span>
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {deletedProducts.map(p => (
-              <div key={p.jan} style={{ display: "flex", alignItems: "center", gap: 4, background: "#FFF", border: "1px solid #FCA5A5", borderRadius: 6, padding: "4px 8px", fontSize: 10 }}>
-                <span style={{ color: "#64748B" }}>{p.name}</span>
+              <div key={p.jan} style={{
+                display: "flex", alignItems: "center", gap: 6, background: "#FFF", border: "1px solid #FECACA",
+                borderRadius: 6, padding: "5px 10px", fontSize: 10, boxShadow: "0 1px 2px rgba(0,0,0,0.04)"
+              }}>
+                <span style={{ color: "#64748B", fontWeight: 500 }}>{p.name}</span>
                 {editMode && (
-                  <button onClick={() => onRestore(p.jan)} style={{ background: "#00B894", color: "#FFF", border: "none", borderRadius: 3, padding: "1px 6px", fontSize: 9, cursor: "pointer", fontWeight: 700 }}>復元</button>
+                  <button onClick={() => onRestore(p.jan)} style={{
+                    background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFF", border: "none",
+                    borderRadius: 4, padding: "2px 8px", fontSize: 9, cursor: "pointer", fontWeight: 700
+                  }}>復元</button>
                 )}
               </div>
             ))}
@@ -1412,7 +1590,7 @@ export default function App() {
     }} />;
   }
   if (screen === "category-select") {
-    return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={() => setScreen("shelf-view")} />;
+    return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={() => setScreen("shelf-view")} showDcs={showDcs} />;
   }
   if (screen === "shelf-view") {
     return <ShelfViewScreen data={SHELF_DATA_111} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
