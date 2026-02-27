@@ -92,15 +92,18 @@ const DCS_PROPOSALS = [
   { jan: "4902705002012", action: "フェース増", reason: "カテゴリ内PI値トップ。カット商品のスペースを吸収しF4→5推奨", piValue: 15.8, categoryAvgPi: 5.2, lifecycle: "成長期", newFace: 5, priority: "中" },
 ];
 
-// Candidate products for product swap (棚替え)
+// Candidate products for product swap & add (棚替え・追加)
 const CANDIDATE_PRODUCTS = [
-  { jan: "4902705090118", name: "ピルクル400 65ml×8", maker: "日清ヨーク", price: 198, rank: "B", color: "#FFF3E0" },
-  { jan: "4902705090211", name: "十勝のむヨーグルト", maker: "よつ葉乳業", price: 168, rank: "B", color: "#FFF3E0" },
-  { jan: "4902705090312", name: "雪印メグミルク牛乳 1L", maker: "雪印メグミルク", price: 228, rank: "A", color: "#E3F2FD" },
-  { jan: "4902705090514", name: "恵 megumi ガセリ菌SP", maker: "雪印メグミルク", price: 138, rank: "A", color: "#E8F5E9" },
-  { jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, rank: "A", color: "#E8F5E9" },
-  { jan: "4902705090716", name: "LG21 プロビオ", maker: "明治", price: 148, rank: "A", color: "#E8F5E9" },
-  { jan: "4902705090817", name: "パルテノ 濃密ギリシャ", maker: "森永乳業", price: 178, rank: "B", color: "#E3F2FD" },
+  { jan: "4902705090118", name: "ピルクル400 65ml×8", maker: "日清ヨーク", price: 198, rank: "B", color: "#FFF3E0", width_mm: 100, height_mm: 95, depth: 4, costRate: 62 },
+  { jan: "4902705090211", name: "十勝のむヨーグルト", maker: "よつ葉乳業", price: 168, rank: "B", color: "#FFF3E0", width_mm: 65, height_mm: 200, depth: 4, costRate: 65 },
+  { jan: "4902705090312", name: "雪印メグミルク牛乳 1L", maker: "雪印メグミルク", price: 228, rank: "A", color: "#E3F2FD", width_mm: 75, height_mm: 255, depth: 3, costRate: 72 },
+  { jan: "4902705090514", name: "恵 megumi ガセリ菌SP", maker: "雪印メグミルク", price: 138, rank: "A", color: "#E8F5E9", width_mm: 60, height_mm: 85, depth: 5, costRate: 58 },
+  { jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, rank: "A", color: "#E8F5E9", width_mm: 50, height_mm: 130, depth: 6, costRate: 55 },
+  { jan: "4902705090716", name: "LG21 プロビオ", maker: "明治", price: 148, rank: "A", color: "#E8F5E9", width_mm: 50, height_mm: 130, depth: 6, costRate: 56 },
+  { jan: "4902705090817", name: "パルテノ 濃密ギリシャ", maker: "森永乳業", price: 178, rank: "B", color: "#E3F2FD", width_mm: 90, height_mm: 80, depth: 4, costRate: 60 },
+  { jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, rank: "A", color: "#E8F5E9", width_mm: 55, height_mm: 170, depth: 5, costRate: 58 },
+  { jan: "4902705091019", name: "カルピスウォーター 500ml", maker: "アサヒ飲料", price: 138, rank: "B", color: "#E0F7FA", width_mm: 65, height_mm: 210, depth: 4, costRate: 68 },
+  { jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, rank: "B", color: "#F3E5F5", width_mm: 65, height_mm: 200, depth: 4, costRate: 62 },
 ];
 
 const DAYS = ["月", "火", "水", "木", "金", "土", "日"];
@@ -283,6 +286,65 @@ const ProductSwapDialog = ({ currentProduct, candidates, onSwap, onClose }) => {
         <div style={{ padding: "12px 20px", borderTop: "1px solid #E2E8F0", display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "10px 0", border: "1px solid #E2E8F0", borderRadius: 8, background: "#FFF", fontSize: 13, cursor: "pointer", fontWeight: 600, color: "#64748B" }}>キャンセル</button>
           <button onClick={() => selected && onSwap(selected)} disabled={!selected} style={{ flex: 1, padding: "10px 0", border: "none", borderRadius: 8, background: selected ? "#0891B2" : "#CBD5E1", color: "#FFF", fontSize: 13, cursor: selected ? "pointer" : "default", fontWeight: 700 }}>入替実行</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 商品追加ダイアログ
+const AddProductDialog = ({ row, candidates, existingJans, onAdd, onClose, shelfWidthMm, currentRowWidth }) => {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+  const available = candidates.filter(c => !existingJans.includes(c.jan));
+  const filtered = available.filter(c =>
+    c.name.includes(search) || c.jan.includes(search) || c.maker.includes(search)
+  );
+  const freeMm = (shelfWidthMm || 900) - (currentRowWidth || 0);
+
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+      <div style={{ background: "#FFF", borderRadius: 12, width: 480, maxHeight: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #E2E8F0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#1B2A4A" }}>商品追加</div>
+            <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94A3B8" }}>×</button>
+          </div>
+          <div style={{ fontSize: 11, color: "#64748B", marginTop: 4 }}>
+            {row}段に追加　|　空きスペース: <strong style={{ color: freeMm > 100 ? "#10B981" : "#F59E0B" }}>{freeMm}mm</strong>
+          </div>
+        </div>
+        <div style={{ padding: "12px 20px", borderBottom: "1px solid #E2E8F0" }}>
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="商品名・JAN・メーカーで検索..."
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #CBD5E1", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }} />
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: "8px 20px" }}>
+          {filtered.length === 0 && (
+            <div style={{ padding: 20, textAlign: "center", color: "#94A3B8", fontSize: 12 }}>
+              {available.length === 0 ? "追加可能な商品がありません" : "検索条件に一致する商品がありません"}
+            </div>
+          )}
+          {filtered.map(c => (
+            <button key={c.jan} onClick={() => setSelected(c)} style={{
+              display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left",
+              padding: "10px 12px", background: selected?.jan === c.jan ? "#DBEAFE" : "#FFF",
+              border: selected?.jan === c.jan ? "2px solid #0891B2" : "1px solid #E2E8F0",
+              borderRadius: 8, marginBottom: 6, cursor: "pointer"
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: c.color || "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: c.rank === "A" ? "#0891B2" : c.rank === "B" ? "#F59E0B" : "#94A3B8" }}>{c.rank}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#1B2A4A" }}>{c.name}</div>
+                <div style={{ fontSize: 10, color: "#64748B" }}>{c.maker}　¥{c.price}　{c.width_mm}mm幅</div>
+              </div>
+              {c.width_mm > freeMm && (
+                <span style={{ fontSize: 9, color: "#DC2626", fontWeight: 600 }}>幅超過</span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: "12px 20px", borderTop: "1px solid #E2E8F0", display: "flex", gap: 8 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "10px 0", border: "1px solid #E2E8F0", borderRadius: 8, background: "#FFF", fontSize: 13, cursor: "pointer", fontWeight: 600, color: "#64748B" }}>キャンセル</button>
+          <button onClick={() => selected && onAdd(selected, row)} disabled={!selected} style={{ flex: 1, padding: "10px 0", border: "none", borderRadius: 8, background: selected ? "#0891B2" : "#CBD5E1", color: "#FFF", fontSize: 13, cursor: selected ? "pointer" : "default", fontWeight: 700 }}>追加</button>
         </div>
       </div>
     </div>
@@ -537,10 +599,54 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const [editMode, setEditMode] = useState(false);
   const [showSwapDialog, setShowSwapDialog] = useState(false);
   const [showDcsPanel, setShowDcsPanel] = useState(showDcs || false);
+  const [addProductRow, setAddProductRow] = useState(null); // 商品追加先の段番号
+  const [showSaveMenu, setShowSaveMenu] = useState(false);
+  const fileInputRef = useRef(null);
   const [dcsProposals, setDcsProposals] = useState(DCS_PROPOSALS);
   const [dragItem, setDragItem] = useState(null);
   const [changeLog, setChangeLog] = useState([]);
   const [taskCompleted, setTaskCompleted] = useState(parentDcsTaskDone || {});
+
+  // --- Undo/Redo ---
+  const [history, setHistory] = useState([]);
+  const [historyIdx, setHistoryIdx] = useState(-1);
+  const isUndoRedo = useRef(false);
+
+  // スナップショット保存（products変更時）
+  useEffect(() => {
+    if (isUndoRedo.current) { isUndoRedo.current = false; return; }
+    setHistory(prev => {
+      const newHist = prev.slice(0, historyIdx + 1);
+      newHist.push(JSON.parse(JSON.stringify(products)));
+      if (newHist.length > 20) newHist.shift();
+      return newHist;
+    });
+    setHistoryIdx(prev => Math.min(prev + 1, 19));
+  }, [products]);
+
+  const canUndo = historyIdx > 0;
+  const canRedo = historyIdx < history.length - 1;
+
+  const handleUndo = () => {
+    if (!canUndo) return;
+    isUndoRedo.current = true;
+    const newIdx = historyIdx - 1;
+    setHistoryIdx(newIdx);
+    const snapshot = JSON.parse(JSON.stringify(history[newIdx]));
+    setProducts(snapshot);
+    setSelectedProduct(null);
+    addLog("元に戻す (Undo)");
+  };
+  const handleRedo = () => {
+    if (!canRedo) return;
+    isUndoRedo.current = true;
+    const newIdx = historyIdx + 1;
+    setHistoryIdx(newIdx);
+    const snapshot = JSON.parse(JSON.stringify(history[newIdx]));
+    setProducts(snapshot);
+    setSelectedProduct(null);
+    addLog("やり直し (Redo)");
+  };
 
   const addLog = (msg) => setChangeLog(prev => [{ time: new Date().toLocaleTimeString("ja-JP"), msg }, ...prev].slice(0, 50));
 
@@ -673,20 +779,16 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     if (!dragItem || !editMode) return;
     setProducts(prev => {
       const arr = [...prev];
-      // ドラッグ元を配列から除去
       const dragIdx = arr.findIndex(p => p.jan === dragItem.jan);
       if (dragIdx < 0) return prev;
       const [moved] = arr.splice(dragIdx, 1);
       moved.row = targetRow;
-      // ターゲット行の商品一覧を再取得（元を除去後の配列から）
       const rowItems = arr.filter(p => p.row === targetRow);
       if (targetIdx >= rowItems.length) {
-        // 行末に追加: 行の最後の商品の後ろに挿入
         const lastInRow = rowItems[rowItems.length - 1];
         const insertAt = lastInRow ? arr.indexOf(lastInRow) + 1 : arr.length;
         arr.splice(insertAt, 0, moved);
       } else {
-        // 指定位置に挿入: ターゲット商品の前に挿入
         const targetProduct = rowItems[targetIdx];
         const insertAt = arr.indexOf(targetProduct);
         arr.splice(insertAt, 0, moved);
@@ -696,6 +798,73 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     addLog(`${dragItem.name} → ${targetRow}段に移動`);
     setDragItem(null);
   };
+
+  // --- Touch Drag & Drop (iPad対応) ---
+  const touchRef = useRef({ startX: 0, startY: 0, product: null, ghost: null, moved: false });
+  const shelfGridRef = useRef(null);
+
+  const handleTouchStart = (product, e) => {
+    if (!editMode) return;
+    const touch = e.touches[0];
+    touchRef.current = { startX: touch.clientX, startY: touch.clientY, product, ghost: null, moved: false };
+    // 長押しでドラッグ開始（300ms）
+    touchRef.current.timer = setTimeout(() => {
+      setDragItem(product);
+      touchRef.current.moved = true;
+      // ゴースト要素作成
+      const ghost = document.createElement("div");
+      ghost.textContent = product.name.slice(0, 8);
+      ghost.style.cssText = "position:fixed;padding:8px 12px;background:#0284C7;color:#FFF;border-radius:8px;font-size:12px;font-weight:700;pointer-events:none;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.3);transform:translate(-50%,-50%);white-space:nowrap;";
+      ghost.style.left = touch.clientX + "px";
+      ghost.style.top = touch.clientY + "px";
+      document.body.appendChild(ghost);
+      touchRef.current.ghost = ghost;
+    }, 300);
+  };
+
+  const handleTouchMove = useCallback((e) => {
+    if (!touchRef.current.moved && !touchRef.current.timer) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchRef.current.startX);
+    const dy = Math.abs(touch.clientY - touchRef.current.startY);
+    // 少しでも動いたら長押しタイマーキャンセル（スクロール意図）
+    if (!touchRef.current.moved && (dx > 10 || dy > 10)) {
+      clearTimeout(touchRef.current.timer);
+      touchRef.current.timer = null;
+      return;
+    }
+    if (!touchRef.current.moved) return;
+    e.preventDefault(); // スクロール抑止
+    // ゴースト移動
+    if (touchRef.current.ghost) {
+      touchRef.current.ghost.style.left = touch.clientX + "px";
+      touchRef.current.ghost.style.top = touch.clientY + "px";
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    clearTimeout(touchRef.current.timer);
+    touchRef.current.timer = null;
+    if (touchRef.current.ghost) {
+      document.body.removeChild(touchRef.current.ghost);
+      touchRef.current.ghost = null;
+    }
+    if (!touchRef.current.moved || !dragItem) { touchRef.current.moved = false; return; }
+
+    // ドロップ先を判定: タッチ位置の要素から data-row, data-idx を取得
+    const touch = e.changedTouches[0];
+    const dropEl = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (dropEl) {
+      const rowEl = dropEl.closest("[data-drop-row]");
+      if (rowEl) {
+        const targetRow = parseInt(rowEl.dataset.dropRow);
+        const targetIdx = parseInt(rowEl.dataset.dropIdx || "999");
+        handleDrop(targetRow, targetIdx);
+      }
+    }
+    touchRef.current.moved = false;
+    setDragItem(null);
+  }, [dragItem]);
 
   // --- Product swap ---
   const handleProductSwap = (newProduct) => {
@@ -710,6 +879,138 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     addLog(`${oldName} → ${newProduct.name} に入替え`);
     setSelectedProduct(null);
     setShowSwapDialog(false);
+  };
+
+  // --- Add new product to shelf ---
+  const handleAddProduct = (candidate, row) => {
+    const rowH = (data.rowHeights || {})[row] || 300;
+    const newProduct = {
+      row,
+      jan: candidate.jan,
+      name: candidate.name,
+      maker: candidate.maker,
+      price: candidate.price,
+      costRate: candidate.costRate || 65,
+      rank: candidate.rank || "B",
+      face: 1,
+      width_mm: candidate.width_mm || 75,
+      height_mm: candidate.height_mm || 200,
+      depth: candidate.depth || 3,
+      cap: calcCap(1, candidate.depth || 3, candidate.height_mm || 200, rowH),
+      baseStock: 10,
+      currentStock: 0,
+      orderPoint: 4,
+      orderQty: 0,
+      inventoryDays: 2.0,
+      leadTime: 1,
+      minOrderUnit: 1,
+      stockCorrection: 0,
+      tag: "新商品",
+      salesWeek: [0,0,0,0,0,0,0],
+      color: candidate.color || "#F1F5F9"
+    };
+    // 棚幅チェック
+    const currentWidth = calcRowWidth(products, row);
+    const addWidth = (newProduct.width_mm) * newProduct.face;
+    const shelfMm = data.shelfWidthMm || 900;
+    if (currentWidth + addWidth > shelfMm) {
+      if (!window.confirm(`棚幅を超過します（${currentWidth + addWidth}mm / ${shelfMm}mm）。追加しますか？`)) return;
+    }
+    setProducts(prev => [...prev, newProduct]);
+    addLog(`${candidate.name} を ${row}段に追加`);
+    setAddProductRow(null);
+  };
+
+  // --- Save / Load / Export / Import ---
+  const STORAGE_KEY = `james-shelf-${data.category}`;
+
+  const handleSave = () => {
+    const saveData = {
+      products: products,
+      deletedProducts: deletedProducts,
+      savedAt: new Date().toLocaleString("ja-JP"),
+      category: data.category,
+      categoryName: data.categoryName
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+      addLog("棚割データを保存しました");
+      alert("保存しました");
+    } catch (err) {
+      alert("保存に失敗しました: " + err.message);
+    }
+    setShowSaveMenu(false);
+  };
+
+  const handleLoad = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { alert("保存データがありません"); return; }
+      const saveData = JSON.parse(raw);
+      setProducts(saveData.products);
+      setDeletedProducts(saveData.deletedProducts || []);
+      setSelectedProduct(null);
+      addLog(`棚割データを読込みました (${saveData.savedAt})`);
+      alert(`${saveData.savedAt} のデータを読込みました`);
+    } catch (err) {
+      alert("読込に失敗しました: " + err.message);
+    }
+    setShowSaveMenu(false);
+  };
+
+  const handleReset = () => {
+    if (!window.confirm("初期データに戻します。よろしいですか？")) return;
+    setProducts(data.products);
+    setDeletedProducts([]);
+    setSelectedProduct(null);
+    addLog("初期データにリセット");
+    setShowSaveMenu(false);
+  };
+
+  const handleExportJson = () => {
+    const exportData = {
+      fixture: data.fixture,
+      category: data.category,
+      categoryName: data.categoryName,
+      shelfWidthMm: data.shelfWidthMm,
+      rowHeights: data.rowHeights,
+      products: products,
+      deletedProducts: deletedProducts,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `james-shelf-${data.category}-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addLog("JSONエクスポート完了");
+    setShowSaveMenu(false);
+  };
+
+  const handleImportJson = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const importData = JSON.parse(ev.target.result);
+        if (!importData.products || !Array.isArray(importData.products)) {
+          alert("無効なファイル形式です"); return;
+        }
+        if (!window.confirm(`${importData.categoryName || "不明"} の棚割データをインポートします。現在のデータは上書きされます。`)) return;
+        setProducts(importData.products);
+        setDeletedProducts(importData.deletedProducts || []);
+        setSelectedProduct(null);
+        addLog(`JSONインポート完了 (${importData.exportedAt || "日時不明"})`);
+      } catch (err) {
+        alert("ファイルの読み込みに失敗しました: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+    setShowSaveMenu(false);
   };
 
   const totalOrders = products.filter(p => p.orderQty > 0).length;
@@ -752,6 +1053,20 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
             background: editMode ? "linear-gradient(135deg, #F59E0B, #D97706)" : "rgba(255,255,255,0.1)",
             color: editMode ? "#FFF" : "#CBD5E1"
           }}>{editMode ? "編集中" : "棚割編集"}</button>
+          {editMode && (
+            <div style={{ display: "flex", gap: 2 }}>
+              <button onClick={handleUndo} disabled={!canUndo} style={{
+                border: "none", borderRadius: 6, padding: "6px 10px", fontSize: 13, cursor: canUndo ? "pointer" : "default",
+                background: canUndo ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
+                color: canUndo ? "#FFF" : "#475569", fontWeight: 700, transition: "all 0.2s"
+              }} title="元に戻す">↩</button>
+              <button onClick={handleRedo} disabled={!canRedo} style={{
+                border: "none", borderRadius: 6, padding: "6px 10px", fontSize: 13, cursor: canRedo ? "pointer" : "default",
+                background: canRedo ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
+                color: canRedo ? "#FFF" : "#475569", fontWeight: 700, transition: "all 0.2s"
+              }} title="やり直し">↪</button>
+            </div>
+          )}
           <button onClick={() => setShowDcsPanel(!showDcsPanel)} style={{
             border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: 700, transition: "all 0.2s",
             background: showDcsPanel ? "linear-gradient(135deg, #0284C7, #0369A1)" : "rgba(255,255,255,0.1)",
@@ -762,6 +1077,38 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
               <span style={{ position: "absolute", top: -4, right: -4, background: "#DC2626", color: "#FFF", borderRadius: 8, padding: "1px 5px", fontSize: 9, fontWeight: 800, minWidth: 16, textAlign: "center" }}>{dcsProposals.length}</span>
             )}
           </button>
+          {/* 保存メニュー */}
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setShowSaveMenu(!showSaveMenu)} style={{
+              border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: 700,
+              background: showSaveMenu ? "linear-gradient(135deg, #10B981, #059669)" : "rgba(255,255,255,0.1)",
+              color: showSaveMenu ? "#FFF" : "#CBD5E1", transition: "all 0.2s"
+            }}>💾</button>
+            {showSaveMenu && (
+              <div style={{
+                position: "absolute", top: "100%", right: 0, marginTop: 4, background: "#FFF", borderRadius: 10,
+                boxShadow: "0 10px 40px rgba(0,0,0,0.2)", padding: 4, zIndex: 100, minWidth: 160
+              }}>
+                {[
+                  { label: "保存", icon: "💾", fn: handleSave },
+                  { label: "読込", icon: "📂", fn: handleLoad },
+                  { label: "リセット", icon: "🔄", fn: handleReset },
+                  { label: "JSONエクスポート", icon: "📤", fn: handleExportJson },
+                  { label: "JSONインポート", icon: "📥", fn: () => fileInputRef.current?.click() },
+                ].map((item, i) => (
+                  <button key={i} onClick={item.fn} style={{
+                    display: "block", width: "100%", textAlign: "left", padding: "8px 12px", border: "none",
+                    background: "transparent", fontSize: 12, cursor: "pointer", borderRadius: 6,
+                    fontWeight: 600, color: "#334155"
+                  }} onMouseEnter={e => e.target.style.background = "#F1F5F9"}
+                     onMouseLeave={e => e.target.style.background = "transparent"}>
+                    {item.icon} {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <input ref={fileInputRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleImportJson} />
+          </div>
           {totalOrders > 0 && (
             <div style={{ background: "linear-gradient(135deg, #0284C7, #0891B2)", color: "#FFF", borderRadius: 20, padding: "5px 14px", fontSize: 12, fontWeight: 700, boxShadow: "0 2px 8px rgba(8,145,178,0.3)" }}>
               発注 {totalOrders}品/{totalQty}個
@@ -863,10 +1210,13 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           )}
 
           {viewMode === "shelf" && (
-            <ShelfGrid products={products} selected={selectedProduct} onSelect={setSelectedProduct}
-              editMode={editMode} onFaceChange={handleFaceChange} onDragStart={handleDragStart} onDrop={handleDrop} dragItem={dragItem}
-              onDelete={handleDeleteProduct} deletedProducts={deletedProducts} onRestore={handleRestoreProduct}
-              shelfWidthMm={data.shelfWidthMm} rowHeights={data.rowHeights} />
+            <div ref={shelfGridRef} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+              <ShelfGrid products={products} selected={selectedProduct} onSelect={setSelectedProduct}
+                editMode={editMode} onFaceChange={handleFaceChange} onDragStart={handleDragStart} onDrop={handleDrop} dragItem={dragItem}
+                onDelete={handleDeleteProduct} deletedProducts={deletedProducts} onRestore={handleRestoreProduct}
+                shelfWidthMm={data.shelfWidthMm} rowHeights={data.rowHeights}
+                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} />
+            </div>
           )}
           {viewMode === "list" && (
             <ListView products={products} selected={selectedProduct} onSelect={setSelectedProduct} onOrderChange={handleOrderChange} onDelete={handleDeleteProduct} editMode={editMode} />
@@ -971,6 +1321,17 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       {showSwapDialog && selectedProduct && (
         <ProductSwapDialog currentProduct={selectedProduct} candidates={CANDIDATE_PRODUCTS} onSwap={handleProductSwap} onClose={() => setShowSwapDialog(false)} />
       )}
+      {addProductRow !== null && (
+        <AddProductDialog
+          row={addProductRow}
+          candidates={CANDIDATE_PRODUCTS}
+          existingJans={products.map(p => p.jan)}
+          onAdd={handleAddProduct}
+          onClose={() => setAddProductRow(null)}
+          shelfWidthMm={data.shelfWidthMm}
+          currentRowWidth={calcRowWidth(products, addProductRow)}
+        />
+      )}
     </div>
   );
 };
@@ -978,7 +1339,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
 // ============================================================
 // SHELF GRID - ゴンドラ什器風 リアルレイアウト
 // ============================================================
-const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights }) => {
+const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights, onTouchStart: parentTouchStart, onAddProduct }) => {
   const rows = [1, 2, 3, 4];
   const totalShelfMm = shelfWidthMm || 900;
   const rh = rowHeights || { 1: 280, 2: 300, 3: 280, 4: 320 };
@@ -1058,10 +1419,12 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
 
                     return (
                       <div key={p.jan}
+                        data-drop-row={row} data-drop-idx={idx}
                         draggable={editMode}
                         onDragStart={editMode ? () => onDragStart(p) : undefined}
                         onDragOver={editMode ? e => e.preventDefault() : undefined}
                         onDrop={editMode ? () => onDrop(row, idx) : undefined}
+                        onTouchStart={editMode && parentTouchStart ? (e) => parentTouchStart(p, e) : undefined}
                         onClick={() => onSelect(p)}
                         style={{
                           position: "relative", height: cellHeightPx,
@@ -1143,18 +1506,27 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                   })}
                   {/* Free space */}
                   {freeMm > 0 && (
-                    <div style={{
-                      width: `${freePercent}%`, minWidth: 30, height: mmToPx(rh[row] || 300),
-                      background: editMode && dragItem ? "linear-gradient(180deg, #DBEAFE 0%, #EFF6FF 100%)" : "linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)",
-                      borderRadius: 8,
-                      border: editMode && dragItem ? "2px dashed #0284C7" : "1px dashed #D1D5DB",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 9, color: editMode && dragItem ? "#0284C7" : "#CBD5E1", flexShrink: 0, fontWeight: 500
-                    }}
+                    <div
+                      data-drop-row={row} data-drop-idx={rowProducts.length}
+                      style={{
+                        width: `${freePercent}%`, minWidth: 30, height: mmToPx(rh[row] || 300),
+                        background: editMode && dragItem ? "linear-gradient(180deg, #DBEAFE 0%, #EFF6FF 100%)" : "linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)",
+                        borderRadius: 8,
+                        border: editMode && dragItem ? "2px dashed #0284C7" : "1px dashed #D1D5DB",
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                        fontSize: 9, color: editMode && dragItem ? "#0284C7" : "#CBD5E1", flexShrink: 0, fontWeight: 500
+                      }}
                       onDragOver={editMode ? e => e.preventDefault() : undefined}
                       onDrop={editMode ? () => onDrop(row, rowProducts.length) : undefined}
                     >
                       {editMode && dragItem ? "ドロップ" : `${freeMm}mm`}
+                      {editMode && !dragItem && onAddProduct && (
+                        <button onClick={(e) => { e.stopPropagation(); onAddProduct(row); }} style={{
+                          border: "1px dashed #0891B2", borderRadius: 6, background: "rgba(8,145,178,0.08)",
+                          color: "#0891B2", fontSize: 10, fontWeight: 700, padding: "4px 10px", cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}>＋ 追加</button>
+                      )}
                     </div>
                   )}
                 </div>
