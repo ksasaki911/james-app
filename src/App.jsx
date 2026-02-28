@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import tenantConfig from "./config/tenant.json";
-import storeData from "./data/store-data.json";
+import { api } from "./api.js";
 
 // ============================================================
 // TENANT CONFIG CONTEXT
@@ -9,23 +9,13 @@ const TenantContext = createContext(tenantConfig);
 const useTenant = () => useContext(TenantContext);
 
 // ============================================================
-// DATA - Load from store-data.json
+// DATA - Will be loaded from API
 // ============================================================
-const FIXTURES = storeData.fixtures;
-const DEPARTMENTS = storeData.departments;
-
-// Build CATEGORIES from store data - only show main departments with 3+ gondolas
-const CATEGORIES = [];
-Object.entries(DEPARTMENTS).forEach(([dept, gondolaCodes]) => {
-  if (gondolaCodes.length >= 3) {
-    CATEGORIES.push({
-      id: dept,
-      name: dept,
-      group: dept,
-      gondolaCodes
-    });
-  }
-});
+// These will be loaded from the API at app initialization
+let FIXTURES = {};
+let DEPARTMENTS = {};
+let CATEGORIES = [];
+let STORE_INFO = { company: '', storeName: '', periodFrom: '20260101', periodTo: '20260101', periodDays: 0 };
 
 // Legacy compatibility
 const AISLE_LAYOUT = null;
@@ -681,11 +671,12 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const initialFixtureId = gondolaCodes[0] || null;
 
   const [currentFixtureId, setCurrentFixtureId] = useState(initialFixtureId);
-  const currentFixture = currentFixtureId ? FIXTURES[currentFixtureId] : null;
-  
+  const [currentFixture, setCurrentFixture] = useState(null);
+  const [fixtureLoading, setFixtureLoading] = useState(false);
+
   const [viewMode, setViewMode] = useState("shelf");
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState(currentFixture?.products || []);
+  const [products, setProducts] = useState([]);
   const [deletedProducts, setDeletedProducts] = useState([]); // カット済み商品
   const [detailTab, setDetailTab] = useState("order");
   const [orderMemo, setOrderMemo] = useState("");
@@ -700,15 +691,33 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const [changeLog, setChangeLog] = useState([]);
   const [taskCompleted, setTaskCompleted] = useState(parentDcsTaskDone || {});
 
-  // Reset products when currentFixtureId changes
+  // Load fixture data from API when currentFixtureId changes
   useEffect(() => {
-    const fixture = FIXTURES[currentFixtureId];
-    if (fixture) {
+    if (!currentFixtureId) return;
+    const cached = FIXTURES[currentFixtureId];
+    if (cached && cached.products && cached.products.length > 0) {
+      // Already loaded full data
+      setCurrentFixture(cached);
+      setProducts(cached.products);
+      setSelectedProduct(null);
+      setDeletedProducts([]);
+      setViewMode("shelf");
+      return;
+    }
+    // Fetch from API
+    setFixtureLoading(true);
+    api.getFixture(currentFixtureId).then(fixture => {
+      FIXTURES[currentFixtureId] = fixture; // cache
+      setCurrentFixture(fixture);
       setProducts(fixture.products || []);
       setSelectedProduct(null);
       setDeletedProducts([]);
       setViewMode("shelf");
-    }
+    }).catch(err => {
+      console.error('Failed to load fixture:', err);
+    }).finally(() => {
+      setFixtureLoading(false);
+    });
   }, [currentFixtureId]);
 
   // --- Undo/Redo ---
@@ -847,10 +856,10 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       handleDeleteProduct(proposal.jan);
     } else if (proposal.action === "フェース減") {
       const prod = products.find(p => p.jan === proposal.jan);
-      if (prod) { const nf = proposal.newFace || 1; const rowH = (currentFixture.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
+      if (prod) { const nf = proposal.newFace || 1; const rowH = (currentFixture?.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
     } else if (proposal.action === "フェース増") {
       const prod = products.find(p => p.jan === proposal.jan);
-      if (prod) { const nf = proposal.newFace || prod.face + 1; const rowH = (currentFixture.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
+      if (prod) { const nf = proposal.newFace || prod.face + 1; const rowH = (currentFixture?.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
     }
     setDcsProposals(prev => {
       const next = prev.filter(p => p.jan !== proposal.jan);
@@ -1028,17 +1037,15 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   // --- Save / Load / Export / Import ---
   const STORAGE_KEY = `james-shelf-${data.category}`;
 
-  const handleSave = () => {
-    const saveData = {
-      products: products,
-      deletedProducts: deletedProducts,
-      savedAt: new Date().toLocaleString("ja-JP"),
-      category: data.category,
-      categoryName: data.categoryName
-    };
+  const handleSave = async () => {
+    if (!currentFixtureId) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
-      addLog("棚割データを保存しました");
+      await api.saveProducts(currentFixtureId, products);
+      // Update cache
+      if (FIXTURES[currentFixtureId]) {
+        FIXTURES[currentFixtureId].products = products;
+      }
+      addLog("棚割データをサーバーに保存しました");
       alert("保存しました");
     } catch (err) {
       alert("保存に失敗しました: " + err.message);
@@ -1046,38 +1053,47 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     setShowSaveMenu(false);
   };
 
-  const handleLoad = () => {
+  const handleLoad = async () => {
+    if (!currentFixtureId) return;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) { alert("保存データがありません"); return; }
-      const saveData = JSON.parse(raw);
-      setProducts(saveData.products);
-      setDeletedProducts(saveData.deletedProducts || []);
+      const fixture = await api.getFixture(currentFixtureId);
+      FIXTURES[currentFixtureId] = fixture;
+      setCurrentFixture(fixture);
+      setProducts(fixture.products || []);
+      setDeletedProducts([]);
       setSelectedProduct(null);
-      addLog(`棚割データを読込みました (${saveData.savedAt})`);
-      alert(`${saveData.savedAt} のデータを読込みました`);
+      addLog("サーバーからデータを再読込しました");
+      alert("サーバーから再読込しました");
     } catch (err) {
       alert("読込に失敗しました: " + err.message);
     }
     setShowSaveMenu(false);
   };
 
-  const handleReset = () => {
-    if (!window.confirm("初期データに戻します。よろしいですか？")) return;
-    setProducts(data.products);
-    setDeletedProducts([]);
-    setSelectedProduct(null);
-    addLog("初期データにリセット");
+  const handleReset = async () => {
+    if (!window.confirm("サーバーの初期データに戻します。よろしいですか？")) return;
+    if (!currentFixtureId) return;
+    try {
+      const fixture = await api.getFixture(currentFixtureId);
+      FIXTURES[currentFixtureId] = fixture;
+      setCurrentFixture(fixture);
+      setProducts(fixture.products || []);
+      setDeletedProducts([]);
+      setSelectedProduct(null);
+      addLog("初期データにリセット");
+    } catch (err) {
+      alert("リセットに失敗しました: " + err.message);
+    }
     setShowSaveMenu(false);
   };
 
   const handleExportJson = () => {
     const exportData = {
-      fixture: data.fixture,
-      category: data.category,
-      categoryName: data.categoryName,
-      shelfWidthMm: data.shelfWidthMm,
-      rowHeights: data.rowHeights,
+      fixtureId: currentFixtureId,
+      department: currentFixture?.department || '',
+      categoryLabel: currentFixture?.categoryLabel || '',
+      shelfWidthMm: currentFixture?.shelfWidthMm || 900,
+      rowHeights: currentFixture?.rowHeights || {},
       products: products,
       deletedProducts: deletedProducts,
       exportedAt: new Date().toISOString()
@@ -1086,7 +1102,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `james-shelf-${data.category}-${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `james-shelf-${currentFixtureId}-${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     addLog("JSONエクスポート完了");
@@ -1288,7 +1304,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
 
       {/* Store Info Header */}
       <div style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "8px 12px", fontSize: 11, color: "#64748B" }}>
-        {storeData.company} {storeData.storeName}店 | 実績期間: {new Date(storeData.periodFrom.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString("ja-JP")} - {new Date(storeData.periodTo.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString("ja-JP")} ({storeData.periodDays}日間)
+        {STORE_INFO.company} {STORE_INFO.storeName}店 | 実績期間: {new Date(STORE_INFO.periodFrom.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString("ja-JP")} - {new Date(STORE_INFO.periodTo.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString("ja-JP")} ({STORE_INFO.periodDays}日間)
       </div>
 
       {/* Fixture Selector Row */}
@@ -1335,33 +1351,49 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Left side */}
         <div style={{ flex: 1, overflow: "auto", padding: 8 }}>
+          {/* Loading indicator */}
+          {fixtureLoading && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ width: 32, height: 32, border: "3px solid #E2E8F0", borderTop: "3px solid #0891B2", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 8px" }} />
+                <div style={{ fontSize: 12, color: "#64748B" }}>ゴンドラデータを読み込み中...</div>
+              </div>
+            </div>
+          )}
+
           {/* DCS panel at top if open */}
-          {showDcsPanel && (
+          {!fixtureLoading && currentFixture && showDcsPanel && (
             <div style={{ marginBottom: 10 }}>
               <DcsProposalPanel proposals={dcsProposals} products={products} onApprove={handleDcsApprove} onReject={handleDcsReject} />
             </div>
           )}
 
-          {currentFixture.fixtureType === "gondola" && viewMode === "shelf" && (
+          {!fixtureLoading && currentFixture && currentFixture.fixtureType === "gondola" && viewMode === "shelf" && (
             <div ref={shelfGridRef} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
               <ShelfGrid products={products} selected={selectedProduct} onSelect={setSelectedProduct}
                 editMode={editMode} onFaceChange={handleFaceChange} onDragStart={handleDragStart} onDrop={handleDrop} dragItem={dragItem}
                 onDelete={handleDeleteProduct} deletedProducts={deletedProducts} onRestore={handleRestoreProduct}
-                shelfWidthMm={currentFixture.shelfWidthMm} rowHeights={currentFixture.rowHeights}
-                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={currentFixture.promotionalSlots} />
+                shelfWidthMm={currentFixture.shelfWidthMm || 900} rowHeights={currentFixture.rowHeights || {}}
+                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={currentFixture.promotionalSlots || []} />
             </div>
           )}
-          {currentFixture.fixtureType === "endcap" && viewMode === "shelf" && (
+          {!fixtureLoading && currentFixture && currentFixture.fixtureType === "endcap" && viewMode === "shelf" && (
             <EndCapView endCap={currentFixture} editMode={editMode} onProductSelect={setSelectedProduct} selected={selectedProduct} />
           )}
-          {currentFixture.fixtureType === "gondola" && viewMode === "list" && (
+          {!fixtureLoading && currentFixture && currentFixture.fixtureType === "gondola" && viewMode === "list" && (
             <ListView products={products} selected={selectedProduct} onSelect={setSelectedProduct} onOrderChange={handleOrderChange} onDelete={handleDeleteProduct} editMode={editMode} />
           )}
-          {currentFixture.fixtureType === "gondola" && viewMode === "priority" && (
+          {!fixtureLoading && currentFixture && currentFixture.fixtureType === "gondola" && viewMode === "priority" && (
             <PriorityView products={products} selected={selectedProduct} onSelect={setSelectedProduct} />
           )}
-          {viewMode === "gondola-metrics" && (
-            <GondolaMetricsPanel products={products} shelfWidthMm={currentFixture.shelfWidthMm} rowCount={currentFixture.rows} fixtureId={currentFixture.fixtureId} categoryName={currentFixture.categoryName} />
+          {!fixtureLoading && currentFixture && viewMode === "gondola-metrics" && (
+            <GondolaMetricsPanel products={products} shelfWidthMm={currentFixture.shelfWidthMm || 900} rowCount={currentFixture.rows || 4} fixtureId={currentFixture.fixtureId} categoryName={currentFixture.categoryName || ''} />
+          )}
+
+          {!fixtureLoading && !currentFixture && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 40, color: "#94A3B8", fontSize: 13 }}>
+              ゴンドラを選択してください
+            </div>
           )}
         </div>
 
@@ -1403,7 +1435,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
             </div>
             <div style={{ flex: 1, overflow: "auto", padding: 12 }}>
               {detailTab === "order" && <OrderPanel product={selectedProduct} onOrderChange={handleOrderChange} onNext={goNext} onPrev={goPrev} />}
-              {detailTab === "params" && <ParamsPanel product={selectedProduct} onParamChange={handleParamChange} onParamChangeBatch={handleParamChangeBatch} rowHeights={currentFixture.rowHeights} />}
+              {detailTab === "params" && <ParamsPanel product={selectedProduct} onParamChange={handleParamChange} onParamChangeBatch={handleParamChangeBatch} rowHeights={currentFixture?.rowHeights || {}} />}
               {detailTab === "chart" && <ChartPanel product={selectedProduct} />}
               {detailTab === "profit" && <ProfitPanel product={selectedProduct} allProducts={products} />}
               {detailTab === "info" && <InfoPanel product={selectedProduct} />}
@@ -1467,7 +1499,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           existingJans={products.map(p => p.jan)}
           onAdd={handleAddProduct}
           onClose={() => setAddProductRow(null)}
-          shelfWidthMm={currentFixture.shelfWidthMm}
+          shelfWidthMm={currentFixture?.shelfWidthMm || 900}
           currentRowWidth={calcRowWidth(products, addProductRow)}
         />
       )}
@@ -2342,11 +2374,116 @@ export default function App() {
   const [dcsProcessed, setDcsProcessed] = useState({ cut: 0, face: 0, total: 0 });
   const [dcsTaskDone, setDcsTaskDone] = useState({});
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load data from API on app initialization
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const storeData = await api.getStore();
+
+        // Store info for display
+        STORE_INFO = {
+          company: storeData.company || '',
+          storeName: storeData.storeName || '',
+          periodFrom: storeData.periodFrom || '20260101',
+          periodTo: storeData.periodTo || '20260101',
+          periodDays: storeData.periodDays || 0
+        };
+
+        // Build departments object
+        DEPARTMENTS = storeData.departments;
+
+        // Fetch fixtures summary (not full product data - that loads lazily)
+        const fixturesList = await api.getFixtures();
+        FIXTURES = {};
+        fixturesList.forEach(f => {
+          FIXTURES[f.id] = {
+            fixtureId: f.id,
+            fixtureType: 'gondola',
+            department: f.department,
+            categoryLabel: f.categoryLabel,
+            categories: f.categories || [],
+            totalSales: f.totalSales || 0,
+            productCount: f.productCount || 0,
+            products: null, // loaded lazily
+          };
+        });
+
+        // Build CATEGORIES from departments - only show main departments with 3+ gondolas
+        CATEGORIES.length = 0;
+        Object.entries(DEPARTMENTS).forEach(([dept, gondolaCodes]) => {
+          if (gondolaCodes.length >= 3) {
+            CATEGORIES.push({
+              id: dept,
+              name: dept,
+              group: dept,
+              gondolaCodes
+            });
+          }
+        });
+
+        setDataLoaded(true);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        alert(`データロード失敗: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // テナント設定に応じてページタイトルを動的設定
   useEffect(() => {
     document.title = `${tenantConfig.brand.name} - ${tenantConfig.brand.subtitle}`;
   }, []);
+
+  // Show loading screen while data is loading
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#F8FAFC',
+        fontSize: 16,
+        color: '#64748B'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A', marginBottom: 16 }}>データを読み込み中...</div>
+          <div style={{ width: 40, height: 40, border: '4px solid #E2E8F0', borderTop: '4px solid #0891B2', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+        </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!dataLoaded) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#F8FAFC',
+        fontSize: 16,
+        color: '#DC2626'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>データロードエラー</div>
+          <div style={{ fontSize: 14, color: '#64748B' }}>サーバーに接続できません。サーバーが起動していることを確認してください。</div>
+        </div>
+      </div>
+    );
+  }
 
   const content = (() => {
     if (screen === "portal") {
