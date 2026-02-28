@@ -3,11 +3,24 @@
 const API_BASE = '';
 
 async function handleResponse(response) {
+  const text = await response.text();
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || response.statusText);
+    let errorMsg = response.statusText;
+    try {
+      const error = JSON.parse(text);
+      errorMsg = error.error || errorMsg;
+    } catch (e) {
+      // Response body was not JSON
+      errorMsg = text || errorMsg;
+    }
+    throw new Error(errorMsg);
   }
-  return response.json();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+  }
 }
 
 export const api = {
