@@ -24,9 +24,40 @@ const SHELF_DATA_111 = null;
 const SHELF_WIDTH_MM = 900;
 
 // ============================================================
-// DCS PROPOSALS (Empty for now - can be populated by AI)
+// DCS PROPOSALS - loaded from API or local fallback
 // ============================================================
-const DCS_PROPOSALS = [];
+let DCS_PROPOSALS = [];
+
+// API base URL (same origin for server mode, configurable for dev)
+const API_BASE = '';
+
+async function loadDcsProposals() {
+  try {
+    // Try API first
+    const res = await fetch(`${API_BASE}/api/dcs/proposals`);
+    if (res.ok) {
+      const data = await res.json();
+      DCS_PROPOSALS = data.proposals || [];
+      console.log(`[DCS] Loaded ${DCS_PROPOSALS.length} proposals from API (${data.pending} pending / ${data.total} total)`);
+      return DCS_PROPOSALS;
+    }
+  } catch (e) {
+    console.warn('[DCS] API not available, trying local fallback:', e.message);
+  }
+  // Fallback: try to load from static file
+  try {
+    const res = await fetch('/data/dcs/dcs_proposals.json');
+    if (res.ok) {
+      DCS_PROPOSALS = await res.json();
+      console.log(`[DCS] Loaded ${DCS_PROPOSALS.length} proposals from local JSON`);
+      return DCS_PROPOSALS;
+    }
+  } catch (e) {
+    console.warn('[DCS] Local fallback also unavailable');
+  }
+  DCS_PROPOSALS = [];
+  return DCS_PROPOSALS;
+}
 
 // ============================================================
 // CANDIDATE PRODUCTS (Sample - for product swap/add dialogs)
@@ -971,6 +1002,11 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       return next;
     });
     addLog(`DCS提案承認: ${proposal.action} ${proposal.jan}`);
+    // API通知（非同期、失敗しても画面には影響しない）
+    fetch(`${API_BASE}/api/dcs/proposals/approve`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jan: proposal.jan, userName: 'buyer' })
+    }).catch(e => console.warn('[DCS] approve API error:', e.message));
   };
 
   const handleDcsReject = (proposal) => {
@@ -984,6 +1020,11 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       return next;
     });
     addLog(`DCS提案却下: ${proposal.action} ${proposal.jan}`);
+    // API通知
+    fetch(`${API_BASE}/api/dcs/proposals/reject`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jan: proposal.jan, userName: 'buyer', reason: '' })
+    }).catch(e => console.warn('[DCS] reject API error:', e.message));
   };
 
   // --- Drag & Drop (配列順序を実際に並び替え) ---
@@ -2542,6 +2583,14 @@ export default function App() {
       });
 
       setDataLoaded(true);
+
+      // DCS提案をAPIから非同期ロード
+      loadDcsProposals().then(proposals => {
+        if (proposals.length > 0) {
+          console.log(`[DCS] ${proposals.length}件の提案をロード完了`);
+        }
+      }).catch(e => console.warn('[DCS] proposals load failed:', e.message));
+
     } catch (error) {
       console.error('Failed to load data:', error);
       setLoadError(error.message);

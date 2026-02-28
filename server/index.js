@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDB, seedFromJSON } from './db.js';
 import apiRouter from './routes/api.js';
+import dcsRouter from './routes/dcs-api.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -37,6 +38,7 @@ async function startServer() {
 
   // API routes
   app.use('/api', apiRouter);
+  app.use('/api/dcs', dcsRouter);
 
   // API error handler — always return JSON, never HTML
   app.use('/api', (err, req, res, next) => {
