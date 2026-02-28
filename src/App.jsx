@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import tenantConfig from "./config/tenant.json";
-import { api } from "./api.js";
+import storeDataImport from "./data/store-data.json";
 
 // ============================================================
 // TENANT CONFIG CONTEXT
@@ -691,33 +691,21 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const [changeLog, setChangeLog] = useState([]);
   const [taskCompleted, setTaskCompleted] = useState(parentDcsTaskDone || {});
 
-  // Load fixture data from API when currentFixtureId changes
+  // Load fixture data from bundled data when currentFixtureId changes
   useEffect(() => {
     if (!currentFixtureId) return;
-    const cached = FIXTURES[currentFixtureId];
-    if (cached && cached.products && cached.products.length > 0) {
-      // Already loaded full data
-      setCurrentFixture(cached);
-      setProducts(cached.products);
-      setSelectedProduct(null);
-      setDeletedProducts([]);
-      setViewMode("shelf");
-      return;
-    }
-    // Fetch from API
-    setFixtureLoading(true);
-    api.getFixture(currentFixtureId).then(fixture => {
-      FIXTURES[currentFixtureId] = fixture; // cache
+    const fixture = FIXTURES[currentFixtureId];
+    if (fixture) {
       setCurrentFixture(fixture);
       setProducts(fixture.products || []);
       setSelectedProduct(null);
       setDeletedProducts([]);
       setViewMode("shelf");
-    }).catch(err => {
-      console.error('Failed to load fixture:', err);
-    }).finally(() => {
-      setFixtureLoading(false);
-    });
+    } else {
+      console.error('Fixture not found:', currentFixtureId);
+      setCurrentFixture(null);
+      setProducts([]);
+    }
   }, [currentFixtureId]);
 
   // --- Undo/Redo ---
@@ -1035,17 +1023,17 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   };
 
   // --- Save / Load / Export / Import ---
-  const STORAGE_KEY = `james-shelf-${data.category}`;
+  const STORAGE_KEY = `james-shelf-${currentFixtureId || 'default'}`;
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!currentFixtureId) return;
     try {
-      await api.saveProducts(currentFixtureId, products);
-      // Update cache
+      // Save to localStorage and update in-memory cache
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ products, deletedProducts, savedAt: new Date().toLocaleString("ja-JP") }));
       if (FIXTURES[currentFixtureId]) {
-        FIXTURES[currentFixtureId].products = products;
+        FIXTURES[currentFixtureId].products = [...products];
       }
-      addLog("棚割データをサーバーに保存しました");
+      addLog("棚割データを保存しました");
       alert("保存しました");
     } catch (err) {
       alert("保存に失敗しました: " + err.message);
@@ -1053,36 +1041,34 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     setShowSaveMenu(false);
   };
 
-  const handleLoad = async () => {
+  const handleLoad = () => {
     if (!currentFixtureId) return;
     try {
-      const fixture = await api.getFixture(currentFixtureId);
-      FIXTURES[currentFixtureId] = fixture;
-      setCurrentFixture(fixture);
-      setProducts(fixture.products || []);
-      setDeletedProducts([]);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { alert("保存データがありません"); return; }
+      const saveData = JSON.parse(raw);
+      setProducts(saveData.products);
+      setDeletedProducts(saveData.deletedProducts || []);
       setSelectedProduct(null);
-      addLog("サーバーからデータを再読込しました");
-      alert("サーバーから再読込しました");
+      addLog("保存データを読込みました (" + saveData.savedAt + ")");
+      alert(saveData.savedAt + " のデータを読込みました");
     } catch (err) {
       alert("読込に失敗しました: " + err.message);
     }
     setShowSaveMenu(false);
   };
 
-  const handleReset = async () => {
-    if (!window.confirm("サーバーの初期データに戻します。よろしいですか？")) return;
+  const handleReset = () => {
+    if (!window.confirm("初期データに戻します。よろしいですか？")) return;
     if (!currentFixtureId) return;
-    try {
-      const fixture = await api.getFixture(currentFixtureId);
-      FIXTURES[currentFixtureId] = fixture;
-      setCurrentFixture(fixture);
-      setProducts(fixture.products || []);
+    // Reload from original imported data
+    const origFixture = storeDataImport.fixtures[currentFixtureId];
+    if (origFixture) {
+      setProducts(origFixture.products || []);
       setDeletedProducts([]);
       setSelectedProduct(null);
       addLog("初期データにリセット");
-    } catch (err) {
-      alert("リセットに失敗しました: " + err.message);
+      localStorage.removeItem(STORAGE_KEY);
     }
     setShowSaveMenu(false);
   };
@@ -2378,11 +2364,10 @@ export default function App() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
+  // Load data directly from bundled JSON (no server required)
+  useEffect(() => {
     try {
-      const storeData = await api.getStore();
+      const storeData = storeDataImport;
 
       // Store info for display
       STORE_INFO = {
@@ -2396,19 +2381,13 @@ export default function App() {
       // Build departments object
       DEPARTMENTS = storeData.departments || {};
 
-      // Fetch fixtures summary (not full product data - that loads lazily)
-      const fixturesList = await api.getFixtures();
+      // Load fixtures directly from JSON
       FIXTURES = {};
-      fixturesList.forEach(f => {
-        FIXTURES[f.id] = {
-          fixtureId: f.id,
-          fixtureType: 'gondola',
-          department: f.department,
-          categoryLabel: f.categoryLabel,
-          categories: f.categories || [],
-          totalSales: f.totalSales || 0,
-          productCount: f.productCount || 0,
-          products: null, // loaded lazily
+      Object.entries(storeData.fixtures || {}).forEach(([id, f]) => {
+        FIXTURES[id] = {
+          ...f,
+          fixtureId: id,
+          fixtureType: f.fixtureType || 'gondola',
         };
       });
 
@@ -2433,11 +2412,6 @@ export default function App() {
       setLoading(false);
     }
   }, []);
-
-  // Load data from API on app initialization
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   // テナント設定に応じてページタイトルを動的設定
   useEffect(() => {
@@ -2491,10 +2465,10 @@ export default function App() {
           <div style={{ fontSize: 13, color: '#64748B', marginBottom: 20 }}>
             サーバーに接続できません。サーバーが起動していることを確認してください。
           </div>
-          <button onClick={loadData} style={{
+          <button onClick={() => window.location.reload()} style={{
             background: '#0891B2', color: '#FFF', border: 'none', borderRadius: 8,
             padding: '10px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer'
-          }}>再試行</button>
+          }}>再読込</button>
         </div>
       </div>
     );
