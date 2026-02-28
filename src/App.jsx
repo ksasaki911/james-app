@@ -2376,65 +2376,68 @@ export default function App() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const storeData = await api.getStore();
+
+      // Store info for display
+      STORE_INFO = {
+        company: storeData.company || '',
+        storeName: storeData.storeName || '',
+        periodFrom: storeData.periodFrom || '20260101',
+        periodTo: storeData.periodTo || '20260101',
+        periodDays: storeData.periodDays || 0
+      };
+
+      // Build departments object
+      DEPARTMENTS = storeData.departments || {};
+
+      // Fetch fixtures summary (not full product data - that loads lazily)
+      const fixturesList = await api.getFixtures();
+      FIXTURES = {};
+      fixturesList.forEach(f => {
+        FIXTURES[f.id] = {
+          fixtureId: f.id,
+          fixtureType: 'gondola',
+          department: f.department,
+          categoryLabel: f.categoryLabel,
+          categories: f.categories || [],
+          totalSales: f.totalSales || 0,
+          productCount: f.productCount || 0,
+          products: null, // loaded lazily
+        };
+      });
+
+      // Build CATEGORIES from departments - only show main departments with 3+ gondolas
+      CATEGORIES.length = 0;
+      Object.entries(DEPARTMENTS).forEach(([dept, gondolaCodes]) => {
+        if (gondolaCodes.length >= 3) {
+          CATEGORIES.push({
+            id: dept,
+            name: dept,
+            group: dept,
+            gondolaCodes
+          });
+        }
+      });
+
+      setDataLoaded(true);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      setLoadError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Load data from API on app initialization
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const storeData = await api.getStore();
-
-        // Store info for display
-        STORE_INFO = {
-          company: storeData.company || '',
-          storeName: storeData.storeName || '',
-          periodFrom: storeData.periodFrom || '20260101',
-          periodTo: storeData.periodTo || '20260101',
-          periodDays: storeData.periodDays || 0
-        };
-
-        // Build departments object
-        DEPARTMENTS = storeData.departments;
-
-        // Fetch fixtures summary (not full product data - that loads lazily)
-        const fixturesList = await api.getFixtures();
-        FIXTURES = {};
-        fixturesList.forEach(f => {
-          FIXTURES[f.id] = {
-            fixtureId: f.id,
-            fixtureType: 'gondola',
-            department: f.department,
-            categoryLabel: f.categoryLabel,
-            categories: f.categories || [],
-            totalSales: f.totalSales || 0,
-            productCount: f.productCount || 0,
-            products: null, // loaded lazily
-          };
-        });
-
-        // Build CATEGORIES from departments - only show main departments with 3+ gondolas
-        CATEGORIES.length = 0;
-        Object.entries(DEPARTMENTS).forEach(([dept, gondolaCodes]) => {
-          if (gondolaCodes.length >= 3) {
-            CATEGORIES.push({
-              id: dept,
-              name: dept,
-              group: dept,
-              gondolaCodes
-            });
-          }
-        });
-
-        setDataLoaded(true);
-      } catch (error) {
-        console.error('Failed to load data:', error);
-        alert(`データロード失敗: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
-  }, []);
+  }, [loadData]);
 
   // テナント設定に応じてページタイトルを動的設定
   useEffect(() => {
@@ -2477,9 +2480,21 @@ export default function App() {
         fontSize: 16,
         color: '#DC2626'
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>データロードエラー</div>
-          <div style={{ fontSize: 14, color: '#64748B' }}>サーバーに接続できません。サーバーが起動していることを確認してください。</div>
+        <div style={{ textAlign: 'center', maxWidth: 480, padding: 24 }}>
+          <div style={{ fontSize: 24, marginBottom: 12 }}>⚠️</div>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>データロードエラー</div>
+          {loadError && (
+            <div style={{ fontSize: 13, color: '#64748B', marginBottom: 16, padding: 12, background: '#FEF2F2', borderRadius: 8, border: '1px solid #FECACA', wordBreak: 'break-all' }}>
+              {loadError}
+            </div>
+          )}
+          <div style={{ fontSize: 13, color: '#64748B', marginBottom: 20 }}>
+            サーバーに接続できません。サーバーが起動していることを確認してください。
+          </div>
+          <button onClick={loadData} style={{
+            background: '#0891B2', color: '#FFF', border: 'none', borderRadius: 8,
+            padding: '10px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer'
+          }}>再試行</button>
         </div>
       </div>
     );
