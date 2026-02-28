@@ -51,16 +51,6 @@ export async function initDB() {
 function createTables() {
   if (!db) return;
 
-  // Drop and recreate tables to ensure clean schema
-  try {
-    db.run('DROP TABLE IF EXISTS shelf_edits');
-    db.run('DROP TABLE IF EXISTS products');
-    db.run('DROP TABLE IF EXISTS fixtures');
-    db.run('DROP TABLE IF EXISTS stores');
-  } catch (e) {
-    // Tables might not exist, that's OK
-  }
-
   db.run(`
     CREATE TABLE IF NOT EXISTS stores (
       store_code TEXT PRIMARY KEY,
