@@ -44,7 +44,77 @@ const CANDIDATE_PRODUCTS = [];
 
 // Note: Real product data comes from FIXTURES
 
+const DAYS = ["月", "火", "水", "木", "金", "土", "日"];
 
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+
+// 段ごとの使用幅と空き幅を計算するユーティリティ
+const calcRowWidth = (products, rowNum) => {
+  const rowProds = products.filter(p => p.row === rowNum);
+  return rowProds.reduce((s, p) => s + (p.width_mm || 90) * p.face, 0);
+};
+const calcRowFreeSpace = (products, rowNum, shelfWidthMm) => {
+  return shelfWidthMm - calcRowWidth(products, rowNum);
+};
+// CAP = フェース × 奥行 × 積段数  （積段数 = floor(棚高さ / 商品高さ)）
+const calcMaxStack = (heightMm, shelfRowHeightMm) => {
+  if (!heightMm || !shelfRowHeightMm) return 1;
+  return Math.max(1, Math.floor(shelfRowHeightMm / heightMm));
+};
+const calcCap = (face, depth, heightMm, shelfRowHeightMm) => {
+  return face * depth * calcMaxStack(heightMm, shelfRowHeightMm);
+};
+
+// ゴンドラ全体の収益メトリクス計算
+const calcGondolaMetrics = (products, shelfWidthMm, rowCount) => {
+  const totalShelfWidth = (shelfWidthMm || 900) * (rowCount || 4);
+  let totalWeekRevenue = 0, totalWeekProfit = 0, totalUsedMm = 0, totalPi = 0;
+  let outOfStock = 0;
+  const skuMetrics = [];
+
+  products.forEach(p => {
+    const weekSales = (p.salesWeek || [0,0,0,0,0,0,0]).reduce((a, b) => a + b, 0);
+    const dailyAvg = p.dailyAvgQty || (weekSales / 7);
+    const costPrice = Math.round(p.price * (p.costRate || 70) / 100);
+    const grossProfit = p.price - costPrice;
+    const weekRevenue = p.totalSales ? Math.round(p.totalSales / 7) : weekSales * p.price;
+    const weekGross = p.totalProfit ? Math.round(p.totalProfit / 7) : weekSales * grossProfit;
+    const usedMm = (p.width_mm || 90) * p.face;
+    const pi = dailyAvg > 0 ? (dailyAvg * 1000 / 500) : 0;
+
+    totalWeekRevenue += weekRevenue;
+    totalWeekProfit += weekGross;
+    totalUsedMm += usedMm;
+    totalPi += pi;
+    if (p.currentStock !== undefined && p.currentStock <= 0) outOfStock++;
+
+    skuMetrics.push({
+      jan: p.jan, name: p.name, rank: p.rank, row: p.row,
+      weekRevenue, weekGross, usedMm,
+      revenuePerMm: usedMm > 0 ? weekRevenue / usedMm : 0,
+      profitPerMm: usedMm > 0 ? weekGross / usedMm : 0,
+      pi, grossMarginRate: 100 - (p.costRate || 70),
+      isLow: p.currentStock !== undefined && p.currentStock <= (p.orderPoint || 0)
+    });
+  });
+
+  return {
+    totalWeekRevenue, totalWeekProfit,
+    totalMonthRevenue: Math.round(totalWeekRevenue * 4.3),
+    totalMonthProfit: Math.round(totalWeekProfit * 4.3),
+    fillRate: totalShelfWidth > 0 ? Math.round((totalUsedMm / totalShelfWidth) * 100) : 0,
+    avgPi: products.length > 0 ? (totalPi / products.length) : 0,
+    skuCount: products.length,
+    outOfStockCount: outOfStock,
+    outOfStockRate: products.length > 0 ? (outOfStock / products.length * 100) : 0,
+    revenuePerMm: totalUsedMm > 0 ? totalWeekRevenue / totalUsedMm : 0,
+    profitPerMm: totalUsedMm > 0 ? totalWeekProfit / totalUsedMm : 0,
+    skuMetrics: skuMetrics.sort((a, b) => b.weekGross - a.weekGross),
+    priorWeek: { revenue: Math.round(totalWeekRevenue * 0.97), profit: Math.round(totalWeekProfit * 0.98) }
+  };
+};
 
 // ============================================================
 // COMPONENTS
