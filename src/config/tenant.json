@@ -29,7 +29,10 @@
     "productMasterSearch": true,
     "categoryReview": false,
     "shelfInstruction": false,
-    "cutSuggestion": false
+    "cutSuggestion": false,
+    "endCapManagement": true,
+    "promotionalSlots": true,
+    "gondolaMetrics": true
   },
   "terms": {
     "systemName": "JAMES",
@@ -43,6 +46,9 @@
     "addProduct": "商品追加",
     "swapProduct": "商品入替",
     "restore": "復元",
+    "endCap": "エンド",
+    "promotionalSpace": "販促スペース",
+    "gondolaMetrics": "ゴンドラ分析",
     "portal": {
       "normalOrder": "通常発注",
       "shelfManagement": "棚割管理",

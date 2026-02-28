@@ -68,6 +68,38 @@ const SHELF_DATA_111 = {
     { row: 4, jan: "4514603311211", name: "ポンジュース 1L", maker: "えひめ飲料", price: 298, costRate: 60, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 6, currentStock: 2, orderPoint: 2, orderQty: 0, inventoryDays: 3.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#FFF9C4" },
     { row: 4, jan: "4902102114712", name: "キリン 生茶 2L", maker: "キリン", price: 168, costRate: 72, rank: "C", face: 1, width_mm: 105, height_mm: 310, depth: 3, cap: 3, baseStock: 8, currentStock: 5, orderPoint: 3, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,4,5,6,4,5], color: "#E0F7FA" },
   ],
+  // エンド（ゴンドラ端プロモーション棚）
+  endCaps: {
+    left: {
+      id: "EC-L-01", side: "left", widthMm: 600, rows: 5,
+      rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
+      periodStart: "2025-03-01", periodEnd: "2025-03-31",
+      theme: "春の新生活キャンペーン",
+      products: [
+        { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 3, width_mm: 75, height_mm: 230, depth: 4, cap: 12, baseStock: 30, currentStock: 12, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [18,22,20,18,24,20,22], color: "#E8F5E9" },
+        { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 6, cap: 48, baseStock: 50, currentStock: 22, orderPoint: 18, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [25,28,24,26,30,25,28], color: "#E3F2FD" },
+        { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 6, cap: 36, baseStock: 40, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [28,32,26,30,34,28,31], color: "#E8F5E9" },
+        { row: 4, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 4, width_mm: 60, height_mm: 85, depth: 8, cap: 96, baseStock: 80, currentStock: 35, orderPoint: 30, orderQty: 0, inventoryDays: 0.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [30,35,28,32,38,30,34], color: "#FFFDE7" },
+        { row: 5, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 20, currentStock: 8, orderPoint: 8, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [18,20,16,19,22,18,20], color: "#C8E6C9" },
+      ]
+    },
+    right: {
+      id: "EC-R-01", side: "right", widthMm: 600, rows: 5,
+      rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
+      periodStart: "2025-03-15", periodEnd: "2025-04-15",
+      theme: "新商品お試しフェア",
+      products: [
+        { row: 1, jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, costRate: 58, rank: "A", face: 4, width_mm: 55, height_mm: 170, depth: 5, cap: 40, baseStock: 40, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [15,18,14,16,20,15,17], color: "#E8F5E9" },
+        { row: 2, jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, costRate: 55, rank: "A", face: 4, width_mm: 50, height_mm: 130, depth: 6, cap: 48, baseStock: 45, currentStock: 20, orderPoint: 16, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [20,24,18,22,26,20,23], color: "#E8F5E9" },
+        { row: 3, jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, costRate: 62, rank: "B", face: 3, width_mm: 65, height_mm: 200, depth: 4, cap: 12, baseStock: 15, currentStock: 6, orderPoint: 5, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [8,10,7,9,12,8,10], color: "#F3E5F5" },
+      ]
+    }
+  },
+  // プロモーションスロット
+  promotionalSlots: [
+    { slotId: "PS-01", row: 2, jan: "4901777303515", periodStart: "2025-03-01", periodEnd: "2025-03-31", theme: "グリコカフェオーレフェア", changeType: "feature", instructions: "エンド連動POP設置。3月末で通常陳列に戻す", targetPi: 15.0, targetWeekRevenue: 5000 },
+    { slotId: "PS-02", row: 3, jan: "4902720100014", periodStart: "2025-03-01", periodEnd: "2025-03-15", theme: "ヨーグルト特売", changeType: "seasonal", instructions: "チラシ連動。特売POP・プライスカード差替", targetPi: 20.0, targetWeekRevenue: 8000 },
+  ],
 };
 
 // 段ごとの使用幅と空き幅を計算するユーティリティ
@@ -85,6 +117,56 @@ const calcMaxStack = (heightMm, shelfRowHeightMm) => {
 };
 const calcCap = (face, depth, heightMm, shelfRowHeightMm) => {
   return face * depth * calcMaxStack(heightMm, shelfRowHeightMm);
+};
+
+// ゴンドラ全体の収益メトリクス計算
+const calcGondolaMetrics = (products, shelfWidthMm, rowCount) => {
+  const totalShelfWidth = (shelfWidthMm || 900) * (rowCount || 4);
+  let totalWeekRevenue = 0, totalWeekProfit = 0, totalUsedMm = 0, totalPi = 0;
+  let outOfStock = 0;
+  const skuMetrics = [];
+
+  products.forEach(p => {
+    const weekSales = p.salesWeek.reduce((a, b) => a + b, 0);
+    const dailyAvg = weekSales / 7;
+    const costPrice = Math.round(p.price * (p.costRate || 70) / 100);
+    const grossProfit = p.price - costPrice;
+    const weekRevenue = weekSales * p.price;
+    const weekGross = weekSales * grossProfit;
+    const usedMm = (p.width_mm || 90) * p.face;
+    const pi = dailyAvg > 0 ? (dailyAvg * 1000 / 500) : 0;
+
+    totalWeekRevenue += weekRevenue;
+    totalWeekProfit += weekGross;
+    totalUsedMm += usedMm;
+    totalPi += pi;
+    if (p.currentStock <= 0) outOfStock++;
+
+    skuMetrics.push({
+      jan: p.jan, name: p.name, rank: p.rank, row: p.row,
+      weekRevenue, weekGross, usedMm,
+      revenuePerMm: usedMm > 0 ? weekRevenue / usedMm : 0,
+      profitPerMm: usedMm > 0 ? weekGross / usedMm : 0,
+      pi, grossMarginRate: 100 - (p.costRate || 70),
+      isLow: p.currentStock <= p.orderPoint
+    });
+  });
+
+  return {
+    totalWeekRevenue, totalWeekProfit,
+    totalMonthRevenue: Math.round(totalWeekRevenue * 4.3),
+    totalMonthProfit: Math.round(totalWeekProfit * 4.3),
+    fillRate: totalShelfWidth > 0 ? Math.round((totalUsedMm / totalShelfWidth) * 100) : 0,
+    avgPi: products.length > 0 ? (totalPi / products.length) : 0,
+    skuCount: products.length,
+    outOfStockCount: outOfStock,
+    outOfStockRate: products.length > 0 ? (outOfStock / products.length * 100) : 0,
+    revenuePerMm: totalUsedMm > 0 ? totalWeekRevenue / totalUsedMm : 0,
+    profitPerMm: totalUsedMm > 0 ? totalWeekProfit / totalUsedMm : 0,
+    skuMetrics: skuMetrics.sort((a, b) => b.weekGross - a.weekGross),
+    // 前週比 (サンプルデータ)
+    priorWeek: { revenue: Math.round(totalWeekRevenue * 0.97), profit: Math.round(totalWeekProfit * 0.98) }
+  };
 };
 
 // DCS カット/フェース変更 提案サンプル（AI推薦 → バイヤー承認フロー）
@@ -1250,17 +1332,21 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       )}
 
       {/* View tabs */}
-      <div style={{ display: "flex", background: "#FFF", borderBottom: "1px solid #E2E8F0", flexShrink: 0 }}>
+      <div style={{ display: "flex", background: "#FFF", borderBottom: "1px solid #E2E8F0", flexShrink: 0, overflowX: "auto" }}>
         {[
           { key: "shelf", label: "棚割" },
           { key: "list", label: "一覧" },
           { key: "priority", label: "重点" },
+          { key: "end-left", label: "左エンド" },
+          { key: "end-right", label: "右エンド" },
+          { key: "gondola-metrics", label: "ゴンドラ分析" },
         ].map(t => (
           <button key={t.key} onClick={() => setViewMode(t.key)} style={{
-            flex: 1, padding: "10px 0", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+            flex: 1, minWidth: 80, padding: "10px 0", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
             background: viewMode === t.key ? "#0891B2" : "#FFF",
             color: viewMode === t.key ? "#FFF" : "#64748B",
-            borderBottom: viewMode === t.key ? "3px solid #0891B2" : "3px solid transparent"
+            borderBottom: viewMode === t.key ? "3px solid #0891B2" : "3px solid transparent",
+            whiteSpace: "nowrap"
           }}>{t.label}</button>
         ))}
       </div>
@@ -1282,7 +1368,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
                 editMode={editMode} onFaceChange={handleFaceChange} onDragStart={handleDragStart} onDrop={handleDrop} dragItem={dragItem}
                 onDelete={handleDeleteProduct} deletedProducts={deletedProducts} onRestore={handleRestoreProduct}
                 shelfWidthMm={data.shelfWidthMm} rowHeights={data.rowHeights}
-                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} />
+                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={data.promotionalSlots} />
             </div>
           )}
           {viewMode === "list" && (
@@ -1290,6 +1376,15 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           )}
           {viewMode === "priority" && (
             <PriorityView products={products} selected={selectedProduct} onSelect={setSelectedProduct} />
+          )}
+          {viewMode === "end-left" && (
+            <EndCapView endCap={data.endCaps?.left} editMode={editMode} onProductSelect={setSelectedProduct} selected={selectedProduct} />
+          )}
+          {viewMode === "end-right" && (
+            <EndCapView endCap={data.endCaps?.right} editMode={editMode} onProductSelect={setSelectedProduct} selected={selectedProduct} />
+          )}
+          {viewMode === "gondola-metrics" && (
+            <GondolaMetricsPanel products={products} shelfWidthMm={data.shelfWidthMm} rowCount={data.rows} fixtureId={data.fixture} categoryName={data.categoryName} />
           )}
         </div>
 
@@ -1406,7 +1501,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
 // ============================================================
 // SHELF GRID - ゴンドラ什器風 リアルレイアウト
 // ============================================================
-const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights, onTouchStart: parentTouchStart, onAddProduct }) => {
+const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights, onTouchStart: parentTouchStart, onAddProduct, promotionalSlots }) => {
   const rows = [1, 2, 3, 4];
   const totalShelfMm = shelfWidthMm || 900;
   const rh = rowHeights || { 1: 280, 2: 300, 3: 280, 4: 320 };
@@ -1534,6 +1629,18 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                               position: "absolute", bottom: 3, left: 3, right: 3, background: "#2563EB",
                               color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 4, padding: "2px 0", letterSpacing: 0.5
                             }}>F増→{dcsProposal.newFace}</div>
+                          </div>
+                        )}
+                        {/* Promotional slot marker */}
+                        {promotionalSlots && promotionalSlots.find(s => s.jan === p.jan) && (
+                          <div style={{
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 7, zIndex: 1, pointerEvents: "none",
+                            border: "2px solid #F59E0B", background: "rgba(245,158,11,0.05)"
+                          }}>
+                            <div style={{
+                              position: "absolute", top: 3, left: 3, background: "#F59E0B",
+                              color: "#FFF", fontSize: 7, fontWeight: 800, borderRadius: 3, padding: "1px 4px"
+                            }}>販促</div>
                           </div>
                         )}
                         <RankBadge rank={p.rank} />
@@ -1891,6 +1998,230 @@ const ChartPanel = ({ product }) => (
     </div>
   </div>
 );
+
+// ============================================================
+// GONDOLA METRICS PANEL - ゴンドラ収益ダッシュボード
+// ============================================================
+const GondolaMetricsPanel = ({ products, shelfWidthMm, rowCount, fixtureId, categoryName }) => {
+  const tenant = useTenant();
+  const tc = tenant.brand.colors;
+  const [sortKey, setSortKey] = useState("weekGross");
+  const m = calcGondolaMetrics(products, shelfWidthMm, rowCount);
+
+  const revDelta = m.totalWeekRevenue - m.priorWeek.revenue;
+  const revPct = m.priorWeek.revenue > 0 ? (revDelta / m.priorWeek.revenue * 100).toFixed(1) : 0;
+  const profDelta = m.totalWeekProfit - m.priorWeek.profit;
+  const profPct = m.priorWeek.profit > 0 ? (profDelta / m.priorWeek.profit * 100).toFixed(1) : 0;
+
+  const sorted = [...m.skuMetrics].sort((a, b) => {
+    if (sortKey === "weekRevenue") return b.weekRevenue - a.weekRevenue;
+    if (sortKey === "revenuePerMm") return b.revenuePerMm - a.revenuePerMm;
+    if (sortKey === "profitPerMm") return b.profitPerMm - a.profitPerMm;
+    if (sortKey === "pi") return b.pi - a.pi;
+    return b.weekGross - a.weekGross;
+  });
+
+  const KpiCard = ({ label, value, sub, delta, color }) => (
+    <div style={{ flex: 1, background: "#FFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: 9, color: "#64748B", fontWeight: 600, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: color || "#1E293B" }}>{value}</div>
+      {sub && <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 2 }}>{sub}</div>}
+      {delta !== undefined && (
+        <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2, color: delta >= 0 ? "#10B981" : "#DC2626" }}>
+          {delta >= 0 ? "+" : ""}{delta}%
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 14, fontWeight: 800, color: "#1E293B" }}>ゴンドラ分析</span>
+        <span style={{ fontSize: 11, color: "#64748B" }}>{fixtureId} | {categoryName}</span>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <KpiCard label="週売上" value={`¥${(m.totalWeekRevenue/1000).toFixed(1)}K`} sub={`月推定 ¥${(m.totalMonthRevenue/1000).toFixed(0)}K`} delta={parseFloat(revPct)} color={tc.primary} />
+        <KpiCard label="週粗利" value={`¥${(m.totalWeekProfit/1000).toFixed(1)}K`} sub={`月推定 ¥${(m.totalMonthProfit/1000).toFixed(0)}K`} delta={parseFloat(profPct)} color="#10B981" />
+        <KpiCard label="充填率" value={`${m.fillRate}%`} sub={`${m.skuCount} SKU`} color="#6366F1" />
+        <KpiCard label="PI平均" value={m.avgPi.toFixed(1)} sub={`売上/mm ¥${m.revenuePerMm.toFixed(0)}`} color="#F59E0B" />
+      </div>
+
+      {/* 品切れアラート */}
+      {m.outOfStockCount > 0 && (
+        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: "8px 12px", marginBottom: 12, fontSize: 11 }}>
+          <span style={{ fontWeight: 700, color: "#DC2626" }}>品切れ・在庫不足: {m.outOfStockCount}品</span>
+          <span style={{ color: "#64748B", marginLeft: 8 }}>（品切率 {m.outOfStockRate.toFixed(1)}%）</span>
+        </div>
+      )}
+
+      {/* SKUランキングテーブル */}
+      <div style={{ fontSize: 11, color: "#64748B", fontWeight: 600, marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+        商品ランキング
+        <select value={sortKey} onChange={e => setSortKey(e.target.value)} style={{ fontSize: 10, border: "1px solid #CBD5E1", borderRadius: 4, padding: "2px 6px" }}>
+          <option value="weekGross">粗利順</option>
+          <option value="weekRevenue">売上順</option>
+          <option value="revenuePerMm">売上/mm</option>
+          <option value="profitPerMm">粗利/mm</option>
+          <option value="pi">PI値</option>
+        </select>
+      </div>
+      <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid #E2E8F0" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
+          <thead>
+            <tr style={{ background: "#1E293B", color: "#FFF" }}>
+              <th style={{ padding: "6px 8px", textAlign: "left" }}>#</th>
+              <th style={{ padding: "6px 8px", textAlign: "left", minWidth: 100 }}>商品名</th>
+              <th style={{ padding: "6px 8px", textAlign: "center" }}>R</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>週売上</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>週粗利</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>売上/mm</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>粗利/mm</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>PI値</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((s, i) => (
+              <tr key={s.jan} style={{ background: i % 2 === 0 ? "#FFF" : "#F8FAFC", borderBottom: "1px solid #F1F5F9" }}>
+                <td style={{ padding: "5px 8px", fontWeight: 700, color: i < 3 ? tc.primary : "#64748B" }}>{i + 1}</td>
+                <td style={{ padding: "5px 8px", fontWeight: 600, color: "#1E293B" }}>{s.name.slice(0, 12)}{s.name.length > 12 ? "…" : ""}</td>
+                <td style={{ padding: "5px 8px", textAlign: "center" }}>
+                  <span style={{ display: "inline-block", width: 18, height: 18, borderRadius: 9, background: s.rank === "A" ? "#DBEAFE" : s.rank === "B" ? "#FEF3C7" : "#F1F5F9", fontSize: 9, fontWeight: 800, lineHeight: "18px", textAlign: "center", color: s.rank === "A" ? tc.primary : s.rank === "B" ? "#D97706" : "#94A3B8" }}>{s.rank}</span>
+                </td>
+                <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 600 }}>¥{s.weekRevenue.toLocaleString()}</td>
+                <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 600, color: "#10B981" }}>¥{s.weekGross.toLocaleString()}</td>
+                <td style={{ padding: "5px 8px", textAlign: "right" }}>¥{s.revenuePerMm.toFixed(0)}</td>
+                <td style={{ padding: "5px 8px", textAlign: "right" }}>¥{s.profitPerMm.toFixed(0)}</td>
+                <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 600, color: s.pi > 10 ? "#10B981" : s.pi > 5 ? "#F59E0B" : "#DC2626" }}>{s.pi.toFixed(1)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 日別売上チャート（合算） */}
+      <div style={{ marginTop: 16, fontSize: 11, fontWeight: 600, color: "#64748B", marginBottom: 6 }}>日別売上推移（全SKU合算）</div>
+      <div style={{ display: "flex", gap: 4, alignItems: "flex-end", height: 80, background: "#F8FAFC", borderRadius: 8, padding: "8px 12px" }}>
+        {["月","火","水","木","金","土","日"].map((d, di) => {
+          const dayTotal = products.reduce((s, p) => s + (p.salesWeek[di] || 0) * p.price, 0);
+          const maxDay = Math.max(...[0,1,2,3,4,5,6].map(i => products.reduce((s, p) => s + (p.salesWeek[i] || 0) * p.price, 0)));
+          const h = maxDay > 0 ? (dayTotal / maxDay) * 60 : 0;
+          return (
+            <div key={d} style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ height: h, background: `linear-gradient(180deg, ${tc.primary}, ${tc.accent || tc.primary})`, borderRadius: "4px 4px 0 0", transition: "height 0.3s" }} />
+              <div style={{ fontSize: 8, color: "#94A3B8", marginTop: 2 }}>{d}</div>
+              <div style={{ fontSize: 7, color: "#64748B" }}>¥{(dayTotal/1000).toFixed(0)}K</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// END CAP VIEW - エンド陳列管理
+// ============================================================
+const EndCapView = ({ endCap, editMode, onProductSelect, selected }) => {
+  const tenant = useTenant();
+  const tc = tenant.brand.colors;
+  if (!endCap) return <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>エンドデータがありません</div>;
+
+  const rows = Array.from({ length: endCap.rows }, (_, i) => i + 1);
+  const totalW = endCap.widthMm || 600;
+  const rh = endCap.rowHeights || {};
+  const mmToPx = (mm) => Math.round((mm / 360) * 120);
+
+  const periodStart = endCap.periodStart || "—";
+  const periodEnd = endCap.periodEnd || "—";
+  const today = new Date().toISOString().split("T")[0];
+  const isActive = periodStart <= today && today <= periodEnd;
+  const daysLeft = periodEnd ? Math.max(0, Math.ceil((new Date(periodEnd) - new Date()) / 86400000)) : "—";
+
+  return (
+    <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+      {/* エンドヘッダー */}
+      <div style={{ background: `linear-gradient(135deg, ${tc.dark} 0%, ${tc.darkGrad} 100%)`, padding: "10px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: isActive ? "#10B981" : "#F59E0B" }} />
+            <span style={{ color: "#FFF", fontSize: 12, fontWeight: 700 }}>エンド ({endCap.side === "left" ? "左" : "右"})</span>
+            <span style={{ color: "#94A3B8", fontSize: 11 }}>{totalW}mm幅 × {endCap.rows}段</span>
+          </div>
+          <span style={{ color: isActive ? "#10B981" : "#F59E0B", fontSize: 10, fontWeight: 700 }}>
+            {isActive ? `実施中 残${daysLeft}日` : "期間外"}
+          </span>
+        </div>
+      </div>
+
+      {/* 期間・テーマバー */}
+      <div style={{ padding: "8px 16px", background: "#FFFBEB", borderBottom: "1px solid #FDE68A", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#92400E" }}>{endCap.theme}</span>
+          <span style={{ fontSize: 10, color: "#A16207", marginLeft: 8 }}>{periodStart} ～ {periodEnd}</span>
+        </div>
+        <span style={{ fontSize: 10, color: "#64748B" }}>{endCap.products.length} SKU</span>
+      </div>
+
+      {/* 棚本体 */}
+      <div style={{ padding: "0 2px", background: "linear-gradient(180deg, #F8FAFC 0%, #EFF3F8 100%)" }}>
+        {rows.map(row => {
+          const rowProducts = endCap.products.filter(p => p.row === row);
+          const usedMm = rowProducts.reduce((s, p) => s + (p.width_mm || 90) * p.face, 0);
+          const freeMm = totalW - usedMm;
+          const rowH = rh[row] || 340;
+
+          return (
+            <div key={row}>
+              <div style={{ display: "flex", alignItems: "center", padding: "4px 10px 2px", gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#1E293B", minWidth: 20 }}>{row}</span>
+                <div style={{ flex: 1, height: 3, background: "#E2E8F0", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: 3, borderRadius: 2, width: `${Math.min(100, (usedMm / totalW) * 100)}%`, background: freeMm < 30 ? "#F59E0B" : "#10B981" }} />
+                </div>
+                <span style={{ fontSize: 9, color: "#64748B", minWidth: 40, textAlign: "right" }}>{freeMm > 0 ? `空${freeMm}mm` : "満"}</span>
+              </div>
+              <div style={{ display: "flex", padding: "0 6px", alignItems: "flex-end", gap: 2 }}>
+                {rowProducts.map(p => {
+                  const cellW = ((p.width_mm || 90) * p.face / totalW) * 100;
+                  const cellH = mmToPx(rowH);
+                  const isSelected = selected?.jan === p.jan;
+                  const isLow = p.currentStock <= p.orderPoint;
+                  return (
+                    <div key={p.jan} onClick={() => onProductSelect && onProductSelect(p)}
+                      style={{
+                        width: `${cellW}%`, minWidth: 48, height: cellH, position: "relative",
+                        background: isSelected ? "linear-gradient(180deg, #DBEAFE 0%, #EFF6FF 100%)" : "linear-gradient(180deg, #FFF 0%, #F8FAFC 100%)",
+                        border: isSelected ? `2px solid ${tc.primary}` : isLow ? "2px solid #F87171" : "1px solid #E2E8F0",
+                        borderRadius: 6, cursor: "pointer", padding: "3px 4px", overflow: "hidden",
+                        boxShadow: isSelected ? `0 0 0 3px ${tc.primary}26` : "0 1px 3px rgba(0,0,0,0.06)"
+                      }}>
+                      <div style={{ fontSize: 9, fontWeight: 600, color: "#1E293B", overflow: "hidden", height: 22, lineHeight: "11px" }}>
+                        {p.name.slice(0, 10)}{p.name.length > 10 ? "…" : ""}
+                      </div>
+                      <div style={{ fontSize: 8, color: "#94A3B8" }}>{p.jan.slice(-4)}</div>
+                      <div style={{ fontSize: 8, color: isLow ? "#DC2626" : "#64748B", marginTop: 2 }}>在庫{p.currentStock} F:{p.face}</div>
+                      {p.tag && (
+                        <span style={{ position: "absolute", top: 2, right: 2, fontSize: 7, fontWeight: 700, padding: "1px 4px", borderRadius: 3, background: p.tag === "チラシ" ? "#DC2626" : p.tag === "販促" ? "#F59E0B" : "#8B5CF6", color: "#FFF" }}>{p.tag}</span>
+                      )}
+                    </div>
+                  );
+                })}
+                {freeMm > 20 && (
+                  <div style={{ width: `${(freeMm / totalW) * 100}%`, minWidth: 24, height: mmToPx(rowH), borderRadius: 6, border: "1px dashed #D1D5DB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, color: "#CBD5E1" }}>
+                    {freeMm}mm
+                  </div>
+                )}
+              </div>
+              <div style={{ margin: "0 6px", height: 3, background: "linear-gradient(180deg, #94A3B8, #CBD5E1)", borderRadius: "0 0 2px 2px" }} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 // ============================================================
 // PROFIT PANEL - 商品別 粗利・売上高・収益分析
