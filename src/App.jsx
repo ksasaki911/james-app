@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import tenantConfig from "./config/tenant.json";
-import storeDataImport from "./data/store-data.json";
+import { parseGondolaMaster, parseShelfPerformance, buildStoreData, exportShelfCSV, exportAllFixturesCSV, downloadCSV } from "./csv-parser.js";
+import storeDataDefault from "./data/store-data.json";
 
 // ============================================================
 // TENANT CONFIG CONTEXT
@@ -349,10 +350,106 @@ const AddProductDialog = ({ row, candidates, existingJans, onAdd, onClose, shelf
 };
 
 // ============================================================
+// CSV IMPORT PANEL
+// ============================================================
+const CsvImportPanel = ({ onDataImport }) => {
+  const [masterFile, setMasterFile] = useState(null);
+  const [perfFile, setPerfFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState(null);
+  const masterRef = useRef(null);
+  const perfRef = useRef(null);
+
+  const handleImport = async () => {
+    if (!masterFile && !perfFile) {
+      alert("少なくとも1つのCSVファイルを選択してください");
+      return;
+    }
+    setImporting(true);
+    setResult(null);
+    try {
+      let masterRecords = [];
+      let perfRecords = [];
+
+      if (masterFile) {
+        const buf = await masterFile.arrayBuffer();
+        masterRecords = parseGondolaMaster(buf);
+      }
+      if (perfFile) {
+        const buf = await perfFile.arrayBuffer();
+        perfRecords = parseShelfPerformance(buf);
+      }
+
+      if (masterRecords.length === 0 && perfRecords.length === 0) {
+        alert("CSVファイルにデータがありません");
+        setImporting(false);
+        return;
+      }
+
+      const storeData = buildStoreData(masterRecords, perfRecords);
+      const fixtureCount = Object.keys(storeData.fixtures).length;
+      const productCount = Object.values(storeData.fixtures).reduce((s, f) => s + (f.products?.length || 0), 0);
+      const deptCount = Object.keys(storeData.departments).length;
+
+      onDataImport(storeData);
+
+      setResult({
+        success: true,
+        message: `取込完了: ${deptCount}部門 / ${fixtureCount}ゴンドラ / ${productCount}商品`,
+        details: `期間: ${storeData.periodFrom || '不明'} - ${storeData.periodTo || '不明'}`
+      });
+      setMasterFile(null);
+      setPerfFile(null);
+      if (masterRef.current) masterRef.current.value = '';
+      if (perfRef.current) perfRef.current.value = '';
+    } catch (err) {
+      setResult({ success: false, message: 'エラー: ' + err.message });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#475569", display: "block", marginBottom: 4 }}>ゴンドラ商品マスター CSV</label>
+          <input ref={masterRef} type="file" accept=".csv" onChange={e => setMasterFile(e.target.files?.[0] || null)}
+            style={{ fontSize: 12, width: "100%", padding: "6px", border: "1px solid #E2E8F0", borderRadius: 6, background: "#F8FAFC" }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#475569", display: "block", marginBottom: 4 }}>棚割実績表 CSV</label>
+          <input ref={perfRef} type="file" accept=".csv" onChange={e => setPerfFile(e.target.files?.[0] || null)}
+            style={{ fontSize: 12, width: "100%", padding: "6px", border: "1px solid #E2E8F0", borderRadius: 6, background: "#F8FAFC" }} />
+        </div>
+      </div>
+      <button onClick={handleImport} disabled={importing || (!masterFile && !perfFile)} style={{
+        width: "100%", padding: "10px", background: (masterFile || perfFile) ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "#E2E8F0",
+        color: (masterFile || perfFile) ? "#FFF" : "#94A3B8", border: "none", borderRadius: 8,
+        fontSize: 13, fontWeight: 700, cursor: (masterFile || perfFile) ? "pointer" : "default"
+      }}>
+        {importing ? "取込中..." : "データ取込"}
+      </button>
+      {result && (
+        <div style={{
+          marginTop: 8, padding: "8px 12px", borderRadius: 8, fontSize: 12,
+          background: result.success ? "#F0FDF4" : "#FEF2F2",
+          color: result.success ? "#065F46" : "#991B1B",
+          border: `1px solid ${result.success ? "#BBF7D0" : "#FECACA"}`
+        }}>
+          <div style={{ fontWeight: 600 }}>{result.message}</div>
+          {result.details && <div style={{ fontSize: 11, marginTop: 2, opacity: 0.8 }}>{result.details}</div>}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================
 // SCREENS
 // ============================================================
 
-const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
+const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone, onDataImport }) => {
   const tenant = useTenant();
   const { brand, features, terms, operationMode } = tenant;
   const c = brand.colors;
@@ -530,6 +627,21 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
             <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 2, lineHeight: "14px" }}>{item.desc}</div>
           </button>
         ))}
+      </div>
+
+      {/* CSV データ取込セクション */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B", marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 3, height: 18, background: "#6366F1", borderRadius: 2 }} />
+          データ管理
+        </div>
+        <div style={{ background: "#FFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "16px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1E293B", marginBottom: 8 }}>基幹データ取込（CSV）</div>
+          <div style={{ fontSize: 11, color: "#64748B", marginBottom: 12, lineHeight: "16px" }}>
+            基幹システムからダウンロードした「ゴンドラ商品マスター」と「棚割実績表」のCSVファイルを取り込みます。
+          </div>
+          <CsvImportPanel onDataImport={onDataImport} />
+        </div>
       </div>
     </div>
   );
@@ -1062,7 +1174,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     if (!window.confirm("初期データに戻します。よろしいですか？")) return;
     if (!currentFixtureId) return;
     // Reload from original imported data
-    const origFixture = storeDataImport.fixtures[currentFixtureId];
+    const origFixture = storeDataDefault.fixtures[currentFixtureId];
     if (origFixture) {
       setProducts(origFixture.products || []);
       setDeletedProducts([]);
@@ -1201,6 +1313,19 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
                   { label: "リセット", icon: "🔄", fn: handleReset },
                   { label: "JSONエクスポート", icon: "📤", fn: handleExportJson },
                   { label: "JSONインポート", icon: "📥", fn: () => fileInputRef.current?.click() },
+                  { label: "CSVエクスポート", icon: "📊", fn: () => {
+                    const origFixture = storeDataDefault.fixtures?.[currentFixtureId];
+                    const csv = exportShelfCSV(products, deletedProducts, currentFixtureId, origFixture?.products);
+                    downloadCSV(csv, `james-shelf-${currentFixtureId}-${new Date().toISOString().slice(0,10)}.csv`);
+                    addLog("CSVエクスポート完了");
+                    setShowSaveMenu(false);
+                  }},
+                  { label: "CSV全ゴンドラ", icon: "📋", fn: () => {
+                    const csv = exportAllFixturesCSV(FIXTURES);
+                    downloadCSV(csv, `james-all-fixtures-${new Date().toISOString().slice(0,10)}.csv`);
+                    addLog("全ゴンドラCSVエクスポート完了");
+                    setShowSaveMenu(false);
+                  }},
                 ].map((item, i) => (
                   <button key={i} onClick={item.fn} style={{
                     display: "block", width: "100%", textAlign: "left", padding: "8px 12px", border: "none",
@@ -2367,7 +2492,19 @@ export default function App() {
   // Load data directly from bundled JSON (no server required)
   useEffect(() => {
     try {
-      const storeData = storeDataImport;
+      // Try localStorage first (for imported data), fall back to bundled default
+      let storeData;
+      try {
+        const saved = localStorage.getItem('james-store-data');
+        if (saved) {
+          storeData = JSON.parse(saved);
+          console.log('Restored data from localStorage');
+        } else {
+          storeData = storeDataDefault;
+        }
+      } catch (e) {
+        storeData = storeDataDefault;
+      }
 
       // Store info for display
       STORE_INFO = {
@@ -2416,6 +2553,34 @@ export default function App() {
   // テナント設定に応じてページタイトルを動的設定
   useEffect(() => {
     document.title = `${tenantConfig.brand.name} - ${tenantConfig.brand.subtitle}`;
+  }, []);
+
+  const handleDataImport = useCallback((storeData) => {
+    // Update module-level data
+    STORE_INFO = {
+      company: storeData.company || '',
+      storeName: storeData.storeName || '',
+      periodFrom: storeData.periodFrom || '20260101',
+      periodTo: storeData.periodTo || '20260101',
+      periodDays: storeData.periodDays || 0
+    };
+    DEPARTMENTS = storeData.departments || {};
+    FIXTURES = {};
+    Object.entries(storeData.fixtures || {}).forEach(([id, f]) => {
+      FIXTURES[id] = { ...f, fixtureId: id, fixtureType: f.fixtureType || 'gondola' };
+    });
+    CATEGORIES.length = 0;
+    Object.entries(DEPARTMENTS).forEach(([dept, gondolaCodes]) => {
+      if (gondolaCodes.length >= 3) {
+        CATEGORIES.push({ id: dept, name: dept, group: dept, gondolaCodes });
+      }
+    });
+    // Save to localStorage for persistence
+    try {
+      localStorage.setItem('james-store-data', JSON.stringify(storeData));
+    } catch (e) { console.warn('Failed to save to localStorage:', e); }
+    setDataLoaded(true);
+    setScreen("portal");
   }, []);
 
   // Show loading screen while data is loading
@@ -2476,7 +2641,7 @@ export default function App() {
 
   const content = (() => {
     if (screen === "portal") {
-      return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={(s) => {
+      return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onDataImport={handleDataImport} onNavigate={(s) => {
         if (s === "category-select-dcs") { setShowDcs(true); setScreen("category-select"); }
         else { setShowDcs(false); setScreen(s); }
       }} />;
@@ -2491,7 +2656,7 @@ export default function App() {
       return <ShelfViewScreen data={{ departmentKey: selectedDepartment }} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
         onDcsProcessedChange={setDcsProcessed} onDcsTaskDoneChange={setDcsTaskDone} dcsTaskDone={dcsTaskDone} />;
     }
-    return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={() => {}} />;
+    return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onDataImport={handleDataImport} onNavigate={() => {}} />;
   })();
 
   return (
