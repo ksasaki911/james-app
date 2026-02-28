@@ -24,179 +24,136 @@ const CATEGORIES = [
   { id: "213", name: "ビスケット・クッキー", group: "菓子" },
 ];
 
-// Product data with auto-replenishment parameters
-// width_mm: 商品1個分の幅（mm）- 棚POWER等から取得想定
-// 棚全体の物理幅: shelfWidthMm で定義
-// costRate: 原価率(%) - 粗利率 = 100 - costRate
-const SHELF_DATA_111 = {
-  fixture: "A-01",
-  category: "111",
-  categoryName: "牛乳飲料・コーヒー飲料",
-  rows: 4,
-  shelfWidthMm: 900, // 1段あたりの棚幅(mm) - ゴンドラ標準 900mm
-  // 各段の棚高さ(mm) - ゴンドラの段ごと有効高さ
-  rowHeights: { 1: 280, 2: 300, 3: 280, 4: 320 },
-  // ※ width_mm / height_mm / depth: 商品1個分の実寸（棚POWER/ストアマネジャーから取得想定）
-  // CAP = face × depth × maxStack（maxStack = floor(棚高さ / 商品高さ)）
-  products: [
-    // row 1 (top) - 牛乳ゾーン  ※1L紙パック: 幅75mm×高さ255mm  棚高280mm→積段1
-    // 75×4 + 75×3 + 75×2 + 75×2 + 75×1 = 900mm ✓
-    { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 4, width_mm: 75, height_mm: 230, depth: 4, cap: 16, baseStock: 20, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [12,15,13,10,14,11,13], color: "#E8F5E9" },
-    { row: 1, jan: "4902705011625", name: "森永おいしい牛乳 1L", maker: "森永乳業", price: 248, costRate: 73, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 3, cap: 9, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [10,12,11,9,13,10,11], color: "#E3F2FD" },
-    { row: 1, jan: "4902220113514", name: "よつ葉特選牛乳 1L", maker: "よつ葉乳業", price: 298, costRate: 68, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 8, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,4,5,7,5,6], color: "#FFF3E0" },
-    { row: 1, jan: "4908011401136", name: "タカナシ低温殺菌牛乳", maker: "タカナシ乳業", price: 328, costRate: 65, rank: "C", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 6, currentStock: 3, orderPoint: 2, orderQty: 0, inventoryDays: 2.5, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [3,4,5,4,6,5,4], color: "#F3E5F5" },
-    { row: 1, jan: "4902720109123", name: "明治おいしい低脂肪乳", maker: "明治", price: 218, costRate: 74, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 8, currentStock: 2, orderPoint: 3, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [2,3,2,1,3,2,2], color: "#E8F5E9" },
-    // row 2 - コーヒー飲料ゾーン  ※1L紙パック: 高255mm(積1), カップ: 高145mm(積2)  棚高300mm
-    // 75×3 + 65×4 + 75×2 + 65×2 + 65×2 = 895mm (空5mm)
-    { row: 2, jan: "4901777303515", name: "グリコカフェオーレ 1L", maker: "グリコ", price: 178, costRate: 70, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 15, currentStock: 7, orderPoint: 5, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [14,16,13,15,17,14,15], color: "#FCE4EC" },
-    { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 5, cap: 40, baseStock: 45, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [18,20,17,19,22,18,20], color: "#E3F2FD" },
-    { row: 2, jan: "4901340032118", name: "ドトール カフェ・オ・レ", maker: "ドトール", price: 148, costRate: 67, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 10, currentStock: 3, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,8,9,7,8], color: "#EFEBE9" },
-    { row: 2, jan: "4902102114516", name: "キリン 午後の紅茶 ミルク", maker: "キリン", price: 168, costRate: 71, rank: "C", face: 2, width_mm: 65, height_mm: 145, depth: 3, cap: 12, baseStock: 12, currentStock: 4, orderPoint: 4, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#E0F7FA" },
-    { row: 2, jan: "4902705002029", name: "マウントレーニア エスプレッソ", maker: "森永乳業", price: 158, costRate: 62, rank: "C", face: 2, width_mm: 65, height_mm: 145, depth: 4, cap: 16, baseStock: 16, currentStock: 7, orderPoint: 6, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [2,3,2,2,3,2,3], color: "#E3F2FD" },
-    // row 3 - ヨーグルト・乳酸菌ゾーン  ※400g: 高95mm(積2), 小型: 高85mm(積3)  棚高280mm
-    // 100×3 + 100×3 + 60×3 + 60×2 = 900mm ✓
-    { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 5, cap: 30, baseStock: 35, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [22,25,20,23,27,22,24], color: "#E8F5E9" },
-    { row: 3, jan: "4902705004115", name: "ビヒダスBB536", maker: "森永乳業", price: 168, costRate: 68, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 4, cap: 24, baseStock: 25, currentStock: 10, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [12,14,11,13,15,12,13], color: "#E3F2FD" },
-    { row: 3, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 3, width_mm: 60, height_mm: 85, depth: 6, cap: 54, baseStock: 55, currentStock: 25, orderPoint: 20, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [20,22,18,21,24,20,22], color: "#FFFDE7" },
-    { row: 3, jan: "4901340035113", name: "ダノン BIO", maker: "ダノン", price: 188, costRate: 58, rank: "B", face: 2, width_mm: 60, height_mm: 85, depth: 3, cap: 18, baseStock: 18, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 2.5, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [4,5,6,5,7,5,6], color: "#FFF9C4" },
-    // row 4 (bottom) - ジュース・野菜飲料ゾーン  ※1L紙パック: 高255mm(積1), 2LPET: 高310mm(積1)  棚高320mm
-    // 75×3 + 75×3 + 75×2 + 75×1 + 75×1 + 105×1 = 855mm (空45mm)
-    { row: 4, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 15, currentStock: 7, orderPoint: 6, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [13,15,12,14,16,13,14], color: "#C8E6C9" },
-    { row: 4, jan: "4902102114615", name: "トロピカーナ オレンジ 1L", maker: "キリン", price: 258, costRate: 64, rank: "B", face: 3, width_mm: 75, height_mm: 255, depth: 3, cap: 9, baseStock: 10, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,8,9,7,8], color: "#E0F7FA" },
-    { row: 4, jan: "4909411003311", name: "カゴメ トマトジュース", maker: "カゴメ", price: 168, costRate: 70, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 8, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,5,6,7,5,6], color: "#C8E6C9" },
-    { row: 4, jan: "4901340036115", name: "伊藤園 1日分の野菜", maker: "伊藤園", price: 178, costRate: 68, rank: "B", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 10, currentStock: 3, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [6,7,5,7,8,6,7], color: "#DCEDC8" },
-    { row: 4, jan: "4514603311211", name: "ポンジュース 1L", maker: "えひめ飲料", price: 298, costRate: 60, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 6, currentStock: 2, orderPoint: 2, orderQty: 0, inventoryDays: 3.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#FFF9C4" },
-    { row: 4, jan: "4902102114712", name: "キリン 生茶 2L", maker: "キリン", price: 168, costRate: 72, rank: "C", face: 1, width_mm: 105, height_mm: 310, depth: 3, cap: 3, baseStock: 8, currentStock: 5, orderPoint: 3, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,4,5,6,4,5], color: "#E0F7FA" },
+// ============================================================
+// AISLE LAYOUT & FIXTURES (Refactored)
+// ============================================================
+// 通路レイアウト: 通路に属するゴンドラとエンドの一覧
+const AISLE_LAYOUT = {
+  aisleId: "A",
+  aisleName: "A通路（乳飲料・乳製品）",
+  gondolas: [
+    { fixtureId: "A-01", position: 1 },
+    { fixtureId: "A-02", position: 2 },
   ],
-  // エンド（ゴンドラ端プロモーション棚）
-  endCaps: {
-    left: {
-      id: "EC-L-01", side: "left", widthMm: 600, rows: 5,
-      rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
-      periodStart: "2025-03-01", periodEnd: "2025-03-31",
-      theme: "春の新生活キャンペーン",
-      products: [
-        { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 3, width_mm: 75, height_mm: 230, depth: 4, cap: 12, baseStock: 30, currentStock: 12, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [18,22,20,18,24,20,22], color: "#E8F5E9" },
-        { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 6, cap: 48, baseStock: 50, currentStock: 22, orderPoint: 18, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [25,28,24,26,30,25,28], color: "#E3F2FD" },
-        { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 6, cap: 36, baseStock: 40, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [28,32,26,30,34,28,31], color: "#E8F5E9" },
-        { row: 4, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 4, width_mm: 60, height_mm: 85, depth: 8, cap: 96, baseStock: 80, currentStock: 35, orderPoint: 30, orderQty: 0, inventoryDays: 0.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [30,35,28,32,38,30,34], color: "#FFFDE7" },
-        { row: 5, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 20, currentStock: 8, orderPoint: 8, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [18,20,16,19,22,18,20], color: "#C8E6C9" },
-      ]
-    },
-    right: {
-      id: "EC-R-01", side: "right", widthMm: 600, rows: 5,
-      rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
-      periodStart: "2025-03-15", periodEnd: "2025-04-15",
-      theme: "新商品お試しフェア",
-      products: [
-        { row: 1, jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, costRate: 58, rank: "A", face: 4, width_mm: 55, height_mm: 170, depth: 5, cap: 40, baseStock: 40, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [15,18,14,16,20,15,17], color: "#E8F5E9" },
-        { row: 2, jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, costRate: 55, rank: "A", face: 4, width_mm: 50, height_mm: 130, depth: 6, cap: 48, baseStock: 45, currentStock: 20, orderPoint: 16, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [20,24,18,22,26,20,23], color: "#E8F5E9" },
-        { row: 3, jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, costRate: 62, rank: "B", face: 3, width_mm: 65, height_mm: 200, depth: 4, cap: 12, baseStock: 15, currentStock: 6, orderPoint: 5, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [8,10,7,9,12,8,10], color: "#F3E5F5" },
-      ]
-    }
+  endCaps: [
+    { fixtureId: "END-A-L", side: "left" },
+    { fixtureId: "END-A-R", side: "right" },
+  ]
+};
+
+// Legacy reference to SHELF_DATA_111 for backward compatibility
+const SHELF_DATA_111 = null; // Replaced with FIXTURES structure
+const SHELF_WIDTH_MM = 900; // Default shelf width - use from fixture data
+
+// 什器マスター: 各什器のデータ
+const FIXTURES = {
+  // ゴンドラA-01: 牛乳飲料・コーヒー飲料
+  "A-01": {
+    fixtureId: "A-01",
+    fixtureType: "gondola",
+    aisleId: "A",
+    position: 1,
+    category: "111",
+    categoryName: "牛乳飲料・コーヒー飲料",
+    rows: 4,
+    shelfWidthMm: 900,
+    rowHeights: { 1: 280, 2: 300, 3: 280, 4: 320 },
+    products: [
+      { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 4, width_mm: 75, height_mm: 230, depth: 4, cap: 16, baseStock: 20, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [12,15,13,10,14,11,13], color: "#E8F5E9" },
+      { row: 1, jan: "4902705011625", name: "森永おいしい牛乳 1L", maker: "森永乳業", price: 248, costRate: 73, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 3, cap: 9, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [10,12,11,9,13,10,11], color: "#E3F2FD" },
+      { row: 1, jan: "4902220113514", name: "よつ葉特選牛乳 1L", maker: "よつ葉乳業", price: 298, costRate: 68, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 8, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,4,5,7,5,6], color: "#FFF3E0" },
+      { row: 1, jan: "4908011401136", name: "タカナシ低温殺菌牛乳", maker: "タカナシ乳業", price: 328, costRate: 65, rank: "C", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 6, currentStock: 3, orderPoint: 2, orderQty: 0, inventoryDays: 2.5, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [3,4,5,4,6,5,4], color: "#F3E5F5" },
+      { row: 1, jan: "4902720109123", name: "明治おいしい低脂肪乳", maker: "明治", price: 218, costRate: 74, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 8, currentStock: 2, orderPoint: 3, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [2,3,2,1,3,2,2], color: "#E8F5E9" },
+      { row: 2, jan: "4901777303515", name: "グリコカフェオーレ 1L", maker: "グリコ", price: 178, costRate: 70, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 15, currentStock: 7, orderPoint: 5, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [14,16,13,15,17,14,15], color: "#FCE4EC" },
+      { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 5, cap: 40, baseStock: 45, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [18,20,17,19,22,18,20], color: "#E3F2FD" },
+      { row: 2, jan: "4901340032118", name: "ドトール カフェ・オ・レ", maker: "ドトール", price: 148, costRate: 67, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 10, currentStock: 3, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,8,9,7,8], color: "#EFEBE9" },
+      { row: 2, jan: "4902102114516", name: "キリン 午後の紅茶 ミルク", maker: "キリン", price: 168, costRate: 71, rank: "C", face: 2, width_mm: 65, height_mm: 145, depth: 3, cap: 12, baseStock: 12, currentStock: 4, orderPoint: 4, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#E0F7FA" },
+      { row: 2, jan: "4902705002029", name: "マウントレーニア エスプレッソ", maker: "森永乳業", price: 158, costRate: 62, rank: "C", face: 2, width_mm: 65, height_mm: 145, depth: 4, cap: 16, baseStock: 16, currentStock: 7, orderPoint: 6, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [2,3,2,2,3,2,3], color: "#E3F2FD" },
+      { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 5, cap: 30, baseStock: 35, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [22,25,20,23,27,22,24], color: "#E8F5E9" },
+      { row: 3, jan: "4902705004115", name: "ビヒダスBB536", maker: "森永乳業", price: 168, costRate: 68, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 4, cap: 24, baseStock: 25, currentStock: 10, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [12,14,11,13,15,12,13], color: "#E3F2FD" },
+      { row: 3, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 3, width_mm: 60, height_mm: 85, depth: 6, cap: 54, baseStock: 55, currentStock: 25, orderPoint: 20, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [20,22,18,21,24,20,22], color: "#FFFDE7" },
+      { row: 3, jan: "4901340035113", name: "ダノン BIO", maker: "ダノン", price: 188, costRate: 58, rank: "B", face: 2, width_mm: 60, height_mm: 85, depth: 3, cap: 18, baseStock: 18, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 2.5, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [4,5,6,5,7,5,6], color: "#FFF9C4" },
+      { row: 4, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 15, currentStock: 7, orderPoint: 6, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [13,15,12,14,16,13,14], color: "#C8E6C9" },
+      { row: 4, jan: "4902102114615", name: "トロピカーナ オレンジ 1L", maker: "キリン", price: 258, costRate: 64, rank: "B", face: 3, width_mm: 75, height_mm: 255, depth: 3, cap: 9, baseStock: 10, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,8,9,7,8], color: "#E0F7FA" },
+      { row: 4, jan: "4909411003311", name: "カゴメ トマトジュース", maker: "カゴメ", price: 168, costRate: 70, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 8, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,5,6,7,5,6], color: "#C8E6C9" },
+      { row: 4, jan: "4901340036115", name: "伊藤園 1日分の野菜", maker: "伊藤園", price: 178, costRate: 68, rank: "B", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 10, currentStock: 3, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [6,7,5,7,8,6,7], color: "#DCEDC8" },
+      { row: 4, jan: "4514603311211", name: "ポンジュース 1L", maker: "えひめ飲料", price: 298, costRate: 60, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 6, currentStock: 2, orderPoint: 2, orderQty: 0, inventoryDays: 3.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#FFF9C4" },
+      { row: 4, jan: "4902102114712", name: "キリン 生茶 2L", maker: "キリン", price: 168, costRate: 72, rank: "C", face: 1, width_mm: 105, height_mm: 310, depth: 3, cap: 3, baseStock: 8, currentStock: 5, orderPoint: 3, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,4,5,6,4,5], color: "#E0F7FA" },
+    ],
+    promotionalSlots: [
+      { slotId: "PS-01", row: 2, jan: "4901777303515", periodStart: "2025-03-01", periodEnd: "2025-03-31", theme: "グリコカフェオーレフェア", changeType: "feature", instructions: "エンド連動POP設置。3月末で通常陳列に戻す", targetPi: 15.0, targetWeekRevenue: 5000 },
+      { slotId: "PS-02", row: 3, jan: "4902720100014", periodStart: "2025-03-01", periodEnd: "2025-03-15", theme: "ヨーグルト特売", changeType: "seasonal", instructions: "チラシ連動。特売POP・プライスカード差替", targetPi: 20.0, targetWeekRevenue: 8000 },
+    ],
   },
-  // プロモーションスロット
-  promotionalSlots: [
-    { slotId: "PS-01", row: 2, jan: "4901777303515", periodStart: "2025-03-01", periodEnd: "2025-03-31", theme: "グリコカフェオーレフェア", changeType: "feature", instructions: "エンド連動POP設置。3月末で通常陳列に戻す", targetPi: 15.0, targetWeekRevenue: 5000 },
-    { slotId: "PS-02", row: 3, jan: "4902720100014", periodStart: "2025-03-01", periodEnd: "2025-03-15", theme: "ヨーグルト特売", changeType: "seasonal", instructions: "チラシ連動。特売POP・プライスカード差替", targetPi: 20.0, targetWeekRevenue: 8000 },
-  ],
+
+  "A-02": {
+    fixtureId: "A-02",
+    fixtureType: "gondola",
+    aisleId: "A",
+    position: 2,
+    category: "114",
+    categoryName: "乳製品・デザート",
+    rows: 4,
+    shelfWidthMm: 900,
+    rowHeights: { 1: 280, 2: 300, 3: 280, 4: 320 },
+    products: [
+      { row: 1, jan: "4902720113214", name: "雪印メグミルク牛乳 1L", maker: "雪印メグミルク", price: 228, costRate: 72, rank: "A", face: 4, width_mm: 75, height_mm: 255, depth: 3, cap: 12, baseStock: 20, currentStock: 9, orderPoint: 7, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [14,16,15,13,17,14,15], color: "#E3F2FD" },
+      { row: 1, jan: "4902705090514", name: "恵 megumi ガセリ菌SP", maker: "雪印メグミルク", price: 138, costRate: 58, rank: "A", face: 3, width_mm: 60, height_mm: 85, depth: 5, cap: 30, baseStock: 30, currentStock: 14, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [18,20,17,19,21,18,19], color: "#E8F5E9" },
+      { row: 1, jan: "4902705090716", name: "LG21 プロビオ", maker: "明治", price: 148, costRate: 56, rank: "A", face: 3, width_mm: 50, height_mm: 130, depth: 6, cap: 36, baseStock: 35, currentStock: 16, orderPoint: 12, orderQty: 0, inventoryDays: 1.3, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [16,18,15,17,20,16,17], color: "#E8F5E9" },
+      { row: 2, jan: "4902705090817", name: "パルテノ 濃密ギリシャ", maker: "森永乳業", price: 178, costRate: 60, rank: "B", face: 3, width_mm: 90, height_mm: 80, depth: 4, cap: 24, baseStock: 24, currentStock: 11, orderPoint: 9, orderQty: 0, inventoryDays: 1.7, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [10,12,11,10,13,11,11], color: "#E3F2FD" },
+      { row: 2, jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, costRate: 58, rank: "A", face: 3, width_mm: 55, height_mm: 170, depth: 5, cap: 30, baseStock: 30, currentStock: 13, orderPoint: 10, orderQty: 0, inventoryDays: 1.4, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [18,20,17,18,22,18,19], color: "#E8F5E9" },
+      { row: 2, jan: "4902705091019", name: "カルピスウォーター 500ml", maker: "アサヒ飲料", price: 138, costRate: 68, rank: "B", face: 2, width_mm: 65, height_mm: 210, depth: 4, cap: 8, baseStock: 10, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,3,4,5,4,4], color: "#E0F7FA" },
+      { row: 2, jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, costRate: 62, rank: "B", face: 2, width_mm: 65, height_mm: 200, depth: 4, cap: 8, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [5,6,4,5,6,5,5], color: "#F3E5F5" },
+      { row: 3, jan: "4902705090118", name: "ピルクル400 65ml×8", maker: "日清ヨーク", price: 198, costRate: 62, rank: "B", face: 2, width_mm: 100, height_mm: 95, depth: 4, cap: 16, baseStock: 18, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,7,9,7,7], color: "#FFF3E0" },
+      { row: 3, jan: "4902705090211", name: "十勝のむヨーグルト", maker: "よつ葉乳業", price: 168, costRate: 65, rank: "B", face: 2, width_mm: 65, height_mm: 200, depth: 4, cap: 8, baseStock: 14, currentStock: 6, orderPoint: 5, orderQty: 0, inventoryDays: 1.6, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [6,7,5,6,8,6,6], color: "#FFF3E0" },
+      { row: 3, jan: "4902705090312", name: "雪印メグミルク純牛乳", maker: "雪印メグミルク", price: 218, costRate: 72, rank: "A", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 1.9, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,5,5,7,5,6], color: "#E3F2FD" },
+      { row: 4, jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, costRate: 55, rank: "A", face: 3, width_mm: 50, height_mm: 130, depth: 6, cap: 36, baseStock: 40, currentStock: 18, orderPoint: 14, orderQty: 0, inventoryDays: 1.1, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [20,24,18,22,26,20,23], color: "#E8F5E9" },
+      { row: 4, jan: "4902720119318", name: "ダノンオイコス プレーン", maker: "ダノン", price: 168, costRate: 58, rank: "B", face: 2, width_mm: 80, height_mm: 100, depth: 3, cap: 9, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.1, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,4,4,6,4,5], color: "#E8F5E9" },
+      { row: 4, jan: "4902705007628", name: "雪印メグミルク 3.6牛乳", maker: "雪印メグミルク", price: 208, costRate: 70, rank: "A", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 15, currentStock: 7, orderPoint: 5, orderQty: 0, inventoryDays: 1.7, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [8,9,7,8,10,8,8], color: "#E3F2FD" },
+    ],
+    promotionalSlots: [],
+  },
+
+  "END-A-L": {
+    fixtureId: "END-A-L",
+    fixtureType: "endcap",
+    aisleId: "A",
+    side: "left",
+    widthMm: 600,
+    rows: 5,
+    rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
+    periodStart: "2025-03-01",
+    periodEnd: "2025-03-31",
+    theme: "春の新生活キャンペーン",
+    products: [
+      { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 3, width_mm: 75, height_mm: 230, depth: 4, cap: 12, baseStock: 30, currentStock: 12, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [18,22,20,18,24,20,22], color: "#E8F5E9" },
+      { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 6, cap: 48, baseStock: 50, currentStock: 22, orderPoint: 18, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [25,28,24,26,30,25,28], color: "#E3F2FD" },
+      { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 6, cap: 36, baseStock: 40, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [28,32,26,30,34,28,31], color: "#E8F5E9" },
+      { row: 4, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 4, width_mm: 60, height_mm: 85, depth: 8, cap: 96, baseStock: 80, currentStock: 35, orderPoint: 30, orderQty: 0, inventoryDays: 0.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [30,35,28,32,38,30,34], color: "#FFFDE7" },
+      { row: 5, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 20, currentStock: 8, orderPoint: 8, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [18,20,16,19,22,18,20], color: "#C8E6C9" },
+    ],
+  },
+
+  "END-A-R": {
+    fixtureId: "END-A-R",
+    fixtureType: "endcap",
+    aisleId: "A",
+    side: "right",
+    widthMm: 600,
+    rows: 5,
+    rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
+    periodStart: "2025-03-15",
+    periodEnd: "2025-04-15",
+    theme: "新商品お試しフェア",
+    products: [
+      { row: 1, jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, costRate: 58, rank: "A", face: 4, width_mm: 55, height_mm: 170, depth: 5, cap: 40, baseStock: 40, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [15,18,14,16,20,15,17], color: "#E8F5E9" },
+      { row: 2, jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, costRate: 55, rank: "A", face: 4, width_mm: 50, height_mm: 130, depth: 6, cap: 48, baseStock: 45, currentStock: 20, orderPoint: 16, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [20,24,18,22,26,20,23], color: "#E8F5E9" },
+      { row: 3, jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, costRate: 62, rank: "B", face: 3, width_mm: 65, height_mm: 200, depth: 4, cap: 12, baseStock: 15, currentStock: 6, orderPoint: 5, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [8,10,7,9,12,8,10], color: "#F3E5F5" },
+    ],
+  },
 };
 
-// 段ごとの使用幅と空き幅を計算するユーティリティ
-const calcRowWidth = (products, rowNum) => {
-  const rowProds = products.filter(p => p.row === rowNum);
-  return rowProds.reduce((s, p) => s + (p.width_mm || 90) * p.face, 0);
-};
-const calcRowFreeSpace = (products, rowNum, shelfWidthMm) => {
-  return shelfWidthMm - calcRowWidth(products, rowNum);
-};
-// CAP = フェース × 奥行 × 積段数  （積段数 = floor(棚高さ / 商品高さ)）
-const calcMaxStack = (heightMm, shelfRowHeightMm) => {
-  if (!heightMm || !shelfRowHeightMm) return 1;
-  return Math.max(1, Math.floor(shelfRowHeightMm / heightMm));
-};
-const calcCap = (face, depth, heightMm, shelfRowHeightMm) => {
-  return face * depth * calcMaxStack(heightMm, shelfRowHeightMm);
-};
 
-// ゴンドラ全体の収益メトリクス計算
-const calcGondolaMetrics = (products, shelfWidthMm, rowCount) => {
-  const totalShelfWidth = (shelfWidthMm || 900) * (rowCount || 4);
-  let totalWeekRevenue = 0, totalWeekProfit = 0, totalUsedMm = 0, totalPi = 0;
-  let outOfStock = 0;
-  const skuMetrics = [];
-
-  products.forEach(p => {
-    const weekSales = p.salesWeek.reduce((a, b) => a + b, 0);
-    const dailyAvg = weekSales / 7;
-    const costPrice = Math.round(p.price * (p.costRate || 70) / 100);
-    const grossProfit = p.price - costPrice;
-    const weekRevenue = weekSales * p.price;
-    const weekGross = weekSales * grossProfit;
-    const usedMm = (p.width_mm || 90) * p.face;
-    const pi = dailyAvg > 0 ? (dailyAvg * 1000 / 500) : 0;
-
-    totalWeekRevenue += weekRevenue;
-    totalWeekProfit += weekGross;
-    totalUsedMm += usedMm;
-    totalPi += pi;
-    if (p.currentStock <= 0) outOfStock++;
-
-    skuMetrics.push({
-      jan: p.jan, name: p.name, rank: p.rank, row: p.row,
-      weekRevenue, weekGross, usedMm,
-      revenuePerMm: usedMm > 0 ? weekRevenue / usedMm : 0,
-      profitPerMm: usedMm > 0 ? weekGross / usedMm : 0,
-      pi, grossMarginRate: 100 - (p.costRate || 70),
-      isLow: p.currentStock <= p.orderPoint
-    });
-  });
-
-  return {
-    totalWeekRevenue, totalWeekProfit,
-    totalMonthRevenue: Math.round(totalWeekRevenue * 4.3),
-    totalMonthProfit: Math.round(totalWeekProfit * 4.3),
-    fillRate: totalShelfWidth > 0 ? Math.round((totalUsedMm / totalShelfWidth) * 100) : 0,
-    avgPi: products.length > 0 ? (totalPi / products.length) : 0,
-    skuCount: products.length,
-    outOfStockCount: outOfStock,
-    outOfStockRate: products.length > 0 ? (outOfStock / products.length * 100) : 0,
-    revenuePerMm: totalUsedMm > 0 ? totalWeekRevenue / totalUsedMm : 0,
-    profitPerMm: totalUsedMm > 0 ? totalWeekProfit / totalUsedMm : 0,
-    skuMetrics: skuMetrics.sort((a, b) => b.weekGross - a.weekGross),
-    // 前週比 (サンプルデータ)
-    priorWeek: { revenue: Math.round(totalWeekRevenue * 0.97), profit: Math.round(totalWeekProfit * 0.98) }
-  };
-};
-
-// DCS カット/フェース変更 提案サンプル（AI推薦 → バイヤー承認フロー）
-const DCS_PROPOSALS = [
-  { jan: "4902720109123", action: "カット", reason: "4週連続 PI値 カテゴリ平均×0.3以下", piValue: 0.8, categoryAvgPi: 5.2, lifecycle: "衰退期", priority: "高" },
-  { jan: "4902102114516", action: "カット", reason: "直近13週 売上下降トレンド。ランクC、在庫日数3.0日超過", piValue: 1.2, categoryAvgPi: 5.2, lifecycle: "衰退期", priority: "高" },
-  { jan: "4902705002029", action: "フェース減", reason: "売上低下傾向、フェース2→1に縮小推奨", piValue: 1.5, categoryAvgPi: 5.2, lifecycle: "成熟後期", newFace: 1, priority: "中" },
-  { jan: "4514603311211", action: "カット", reason: "4週連続販売低迷。同サブカテゴリ上位品に統合推奨", piValue: 1.0, categoryAvgPi: 5.2, lifecycle: "衰退期", priority: "中" },
-  { jan: "4902102114712", action: "フェース減", reason: "PI値低迷、棚位置を上段に移動しスペース確保", piValue: 1.3, categoryAvgPi: 5.2, lifecycle: "成熟後期", newFace: 1, priority: "低" },
-  // フェース増提案（カットで空いたスペースの活用）
-  { jan: "4902720109116", action: "フェース増", reason: "ランクA 売上好調。カットで空く150mmを活用しF4→5に拡大推奨", piValue: 12.5, categoryAvgPi: 5.2, lifecycle: "成長期", newFace: 5, priority: "高" },
-  { jan: "4902705002012", action: "フェース増", reason: "カテゴリ内PI値トップ。カット商品のスペースを吸収しF4→5推奨", piValue: 15.8, categoryAvgPi: 5.2, lifecycle: "成長期", newFace: 5, priority: "中" },
-];
-
-// Candidate products for product swap & add (棚替え・追加)
-const CANDIDATE_PRODUCTS = [
-  { jan: "4902705090118", name: "ピルクル400 65ml×8", maker: "日清ヨーク", price: 198, rank: "B", color: "#FFF3E0", width_mm: 100, height_mm: 95, depth: 4, costRate: 62 },
-  { jan: "4902705090211", name: "十勝のむヨーグルト", maker: "よつ葉乳業", price: 168, rank: "B", color: "#FFF3E0", width_mm: 65, height_mm: 200, depth: 4, costRate: 65 },
-  { jan: "4902705090312", name: "雪印メグミルク牛乳 1L", maker: "雪印メグミルク", price: 228, rank: "A", color: "#E3F2FD", width_mm: 75, height_mm: 255, depth: 3, costRate: 72 },
-  { jan: "4902705090514", name: "恵 megumi ガセリ菌SP", maker: "雪印メグミルク", price: 138, rank: "A", color: "#E8F5E9", width_mm: 60, height_mm: 85, depth: 5, costRate: 58 },
-  { jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, rank: "A", color: "#E8F5E9", width_mm: 50, height_mm: 130, depth: 6, costRate: 55 },
-  { jan: "4902705090716", name: "LG21 プロビオ", maker: "明治", price: 148, rank: "A", color: "#E8F5E9", width_mm: 50, height_mm: 130, depth: 6, costRate: 56 },
-  { jan: "4902705090817", name: "パルテノ 濃密ギリシャ", maker: "森永乳業", price: 178, rank: "B", color: "#E3F2FD", width_mm: 90, height_mm: 80, depth: 4, costRate: 60 },
-  { jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, rank: "A", color: "#E8F5E9", width_mm: 55, height_mm: 170, depth: 5, costRate: 58 },
-  { jan: "4902705091019", name: "カルピスウォーター 500ml", maker: "アサヒ飲料", price: 138, rank: "B", color: "#E0F7FA", width_mm: 65, height_mm: 210, depth: 4, costRate: 68 },
-  { jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, rank: "B", color: "#F3E5F5", width_mm: 65, height_mm: 200, depth: 4, costRate: 62 },
-];
-
-const DAYS = ["月", "火", "水", "木", "金", "土", "日"];
-const SHELF_WIDTH_MM = SHELF_DATA_111.shelfWidthMm || 900; // デフォルト棚幅
 
 // ============================================================
 // COMPONENTS
@@ -739,9 +696,13 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const { brand, features, terms } = tenant;
   const tc = brand.colors;
 
+  const [currentFixtureId, setCurrentFixtureId] = useState("A-01");
+  const aisle = AISLE_LAYOUT;
+  const currentFixture = FIXTURES[currentFixtureId] || FIXTURES["A-01"];
+  
   const [viewMode, setViewMode] = useState("shelf");
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState(data.products);
+  const [products, setProducts] = useState(currentFixture.products || []);
   const [deletedProducts, setDeletedProducts] = useState([]); // カット済み商品
   const [detailTab, setDetailTab] = useState("order");
   const [orderMemo, setOrderMemo] = useState("");
@@ -755,6 +716,17 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const [dragItem, setDragItem] = useState(null);
   const [changeLog, setChangeLog] = useState([]);
   const [taskCompleted, setTaskCompleted] = useState(parentDcsTaskDone || {});
+
+  // Reset products when currentFixtureId changes
+  useEffect(() => {
+    const fixture = FIXTURES[currentFixtureId];
+    if (fixture) {
+      setProducts(fixture.products || []);
+      setSelectedProduct(null);
+      setDeletedProducts([]);
+      setViewMode("shelf");
+    }
+  }, [currentFixtureId]);
 
   // --- Undo/Redo ---
   const [history, setHistory] = useState([]);
@@ -892,10 +864,10 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       handleDeleteProduct(proposal.jan);
     } else if (proposal.action === "フェース減") {
       const prod = products.find(p => p.jan === proposal.jan);
-      if (prod) { const nf = proposal.newFace || 1; const rowH = (data.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
+      if (prod) { const nf = proposal.newFace || 1; const rowH = (currentFixture.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
     } else if (proposal.action === "フェース増") {
       const prod = products.find(p => p.jan === proposal.jan);
-      if (prod) { const nf = proposal.newFace || prod.face + 1; const rowH = (data.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
+      if (prod) { const nf = proposal.newFace || prod.face + 1; const rowH = (currentFixture.rowHeights || {})[prod.row] || 300; handleParamChangeBatch(proposal.jan, { face: nf, cap: calcCap(nf, prod.depth || 3, prod.height_mm || 200, rowH) }); }
     }
     setDcsProposals(prev => {
       const next = prev.filter(p => p.jan !== proposal.jan);
@@ -1331,16 +1303,37 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
         </div>
       )}
 
-      {/* View tabs */}
+      {/* Fixture Selector Row */}
+      <div style={{ display: "flex", background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", flexShrink: 0, overflowX: "auto", padding: "8px 12px", gap: 8, alignItems: "center" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", minWidth: 60 }}>什器:</span>
+        {[...aisle.gondolas, ...aisle.endCaps].map(fid => {
+          const fixture = FIXTURES[fid.fixtureId];
+          if (!fixture) return null;
+          const isGondola = fixture.fixtureType === "gondola";
+          const label = isGondola ? fixture.categoryName : `${fixture.side === "left" ? "左" : "右"}エンド`;
+          return (
+            <button key={fid.fixtureId} onClick={() => setCurrentFixtureId(fid.fixtureId)} style={{
+              padding: "6px 14px", borderRadius: 20, border: currentFixtureId === fid.fixtureId ? "2px solid #0891B2" : "1px solid #CBD5E1",
+              background: currentFixtureId === fid.fixtureId ? "#DBEAFE" : "#FFF",
+              color: currentFixtureId === fid.fixtureId ? "#0891B2" : "#64748B",
+              cursor: "pointer", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
+              transition: "all 0.2s"
+            }}>{label}</button>
+          );
+        })}
+      </div>
+
+      {/* View mode tabs - context-dependent */}
       <div style={{ display: "flex", background: "#FFF", borderBottom: "1px solid #E2E8F0", flexShrink: 0, overflowX: "auto" }}>
-        {[
+        {(currentFixture.fixtureType === "gondola" ? [
           { key: "shelf", label: "棚割" },
           { key: "list", label: "一覧" },
           { key: "priority", label: "重点" },
-          { key: "end-left", label: "左エンド" },
-          { key: "end-right", label: "右エンド" },
           { key: "gondola-metrics", label: "ゴンドラ分析" },
-        ].map(t => (
+        ] : [
+          { key: "shelf", label: "エンド陳列" },
+          { key: "gondola-metrics", label: "分析" },
+        ]).map(t => (
           <button key={t.key} onClick={() => setViewMode(t.key)} style={{
             flex: 1, minWidth: 80, padding: "10px 0", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
             background: viewMode === t.key ? "#0891B2" : "#FFF",
@@ -1362,29 +1355,26 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
             </div>
           )}
 
-          {viewMode === "shelf" && (
+          {currentFixture.fixtureType === "gondola" && viewMode === "shelf" && (
             <div ref={shelfGridRef} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
               <ShelfGrid products={products} selected={selectedProduct} onSelect={setSelectedProduct}
                 editMode={editMode} onFaceChange={handleFaceChange} onDragStart={handleDragStart} onDrop={handleDrop} dragItem={dragItem}
                 onDelete={handleDeleteProduct} deletedProducts={deletedProducts} onRestore={handleRestoreProduct}
-                shelfWidthMm={data.shelfWidthMm} rowHeights={data.rowHeights}
-                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={data.promotionalSlots} />
+                shelfWidthMm={currentFixture.shelfWidthMm} rowHeights={currentFixture.rowHeights}
+                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={currentFixture.promotionalSlots} />
             </div>
           )}
-          {viewMode === "list" && (
+          {currentFixture.fixtureType === "endcap" && viewMode === "shelf" && (
+            <EndCapView endCap={currentFixture} editMode={editMode} onProductSelect={setSelectedProduct} selected={selectedProduct} />
+          )}
+          {currentFixture.fixtureType === "gondola" && viewMode === "list" && (
             <ListView products={products} selected={selectedProduct} onSelect={setSelectedProduct} onOrderChange={handleOrderChange} onDelete={handleDeleteProduct} editMode={editMode} />
           )}
-          {viewMode === "priority" && (
+          {currentFixture.fixtureType === "gondola" && viewMode === "priority" && (
             <PriorityView products={products} selected={selectedProduct} onSelect={setSelectedProduct} />
           )}
-          {viewMode === "end-left" && (
-            <EndCapView endCap={data.endCaps?.left} editMode={editMode} onProductSelect={setSelectedProduct} selected={selectedProduct} />
-          )}
-          {viewMode === "end-right" && (
-            <EndCapView endCap={data.endCaps?.right} editMode={editMode} onProductSelect={setSelectedProduct} selected={selectedProduct} />
-          )}
           {viewMode === "gondola-metrics" && (
-            <GondolaMetricsPanel products={products} shelfWidthMm={data.shelfWidthMm} rowCount={data.rows} fixtureId={data.fixture} categoryName={data.categoryName} />
+            <GondolaMetricsPanel products={products} shelfWidthMm={currentFixture.shelfWidthMm} rowCount={currentFixture.rows} fixtureId={currentFixture.fixtureId} categoryName={currentFixture.categoryName} />
           )}
         </div>
 
@@ -1426,7 +1416,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
             </div>
             <div style={{ flex: 1, overflow: "auto", padding: 12 }}>
               {detailTab === "order" && <OrderPanel product={selectedProduct} onOrderChange={handleOrderChange} onNext={goNext} onPrev={goPrev} />}
-              {detailTab === "params" && <ParamsPanel product={selectedProduct} onParamChange={handleParamChange} onParamChangeBatch={handleParamChangeBatch} rowHeights={data.rowHeights} />}
+              {detailTab === "params" && <ParamsPanel product={selectedProduct} onParamChange={handleParamChange} onParamChangeBatch={handleParamChangeBatch} rowHeights={currentFixture.rowHeights} />}
               {detailTab === "chart" && <ChartPanel product={selectedProduct} />}
               {detailTab === "profit" && <ProfitPanel product={selectedProduct} allProducts={products} />}
               {detailTab === "info" && <InfoPanel product={selectedProduct} />}
@@ -1490,7 +1480,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           existingJans={products.map(p => p.jan)}
           onAdd={handleAddProduct}
           onClose={() => setAddProductRow(null)}
-          shelfWidthMm={data.shelfWidthMm}
+          shelfWidthMm={currentFixture.shelfWidthMm}
           currentRowWidth={calcRowWidth(products, addProductRow)}
         />
       )}
@@ -2381,7 +2371,7 @@ export default function App() {
       return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={() => setScreen("shelf-view")} showDcs={showDcs} />;
     }
     if (screen === "shelf-view") {
-      return <ShelfViewScreen data={SHELF_DATA_111} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
+      return <ShelfViewScreen data={FIXTURES["A-01"]} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
         onDcsProcessedChange={setDcsProcessed} onDcsTaskDoneChange={setDcsTaskDone} dcsTaskDone={dcsTaskDone} />;
     }
     return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={() => {}} />;
