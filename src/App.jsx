@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import tenantConfig from "./config/tenant.json";
+import storeData from "./data/store-data.json";
 
 // ============================================================
 // TENANT CONFIG CONTEXT
@@ -8,150 +9,40 @@ const TenantContext = createContext(tenantConfig);
 const useTenant = () => useContext(TenantContext);
 
 // ============================================================
-// DATA
+// DATA - Load from store-data.json
 // ============================================================
-const CATEGORIES = [
-  { id: "011", name: "ヘアケア", group: "家庭用品" },
-  { id: "012", name: "衣料洗剤・文具", group: "家庭用品" },
-  { id: "013", name: "オーラルケア", group: "家庭用品" },
-  { id: "014", name: "スキンケア・虫よけ", group: "家庭用品" },
-  { id: "111", name: "牛乳飲料・コーヒー飲料", group: "飲料・デザート" },
-  { id: "112", name: "ビール・発泡酒", group: "飲料・デザート" },
-  { id: "113", name: "洋酒・日本酒", group: "飲料・デザート" },
-  { id: "114", name: "乳製品・デザート", group: "飲料・デザート" },
-  { id: "211", name: "スナック菓子", group: "菓子" },
-  { id: "212", name: "チョコレート", group: "菓子" },
-  { id: "213", name: "ビスケット・クッキー", group: "菓子" },
-];
+const FIXTURES = storeData.fixtures;
+const DEPARTMENTS = storeData.departments;
+
+// Build CATEGORIES from store data - only show main departments with 3+ gondolas
+const CATEGORIES = [];
+Object.entries(DEPARTMENTS).forEach(([dept, gondolaCodes]) => {
+  if (gondolaCodes.length >= 3) {
+    CATEGORIES.push({
+      id: dept,
+      name: dept,
+      group: dept,
+      gondolaCodes
+    });
+  }
+});
+
+// Legacy compatibility
+const AISLE_LAYOUT = null;
+const SHELF_DATA_111 = null;
+const SHELF_WIDTH_MM = 900;
 
 // ============================================================
-// AISLE LAYOUT & FIXTURES (Refactored)
+// DCS PROPOSALS (Empty for now - can be populated by AI)
 // ============================================================
-// 通路レイアウト: 通路に属するゴンドラとエンドの一覧
-const AISLE_LAYOUT = {
-  aisleId: "A",
-  aisleName: "A通路（乳飲料・乳製品）",
-  gondolas: [
-    { fixtureId: "A-01", position: 1 },
-    { fixtureId: "A-02", position: 2 },
-  ],
-  endCaps: [
-    { fixtureId: "END-A-L", side: "left" },
-    { fixtureId: "END-A-R", side: "right" },
-  ]
-};
+const DCS_PROPOSALS = [];
 
-// Legacy reference to SHELF_DATA_111 for backward compatibility
-const SHELF_DATA_111 = null; // Replaced with FIXTURES structure
-const SHELF_WIDTH_MM = 900; // Default shelf width - use from fixture data
+// ============================================================
+// CANDIDATE PRODUCTS (Sample - for product swap/add dialogs)
+// ============================================================
+const CANDIDATE_PRODUCTS = [];
 
-// 什器マスター: 各什器のデータ
-const FIXTURES = {
-  // ゴンドラA-01: 牛乳飲料・コーヒー飲料
-  "A-01": {
-    fixtureId: "A-01",
-    fixtureType: "gondola",
-    aisleId: "A",
-    position: 1,
-    category: "111",
-    categoryName: "牛乳飲料・コーヒー飲料",
-    rows: 4,
-    shelfWidthMm: 900,
-    rowHeights: { 1: 280, 2: 300, 3: 280, 4: 320 },
-    products: [
-      { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 4, width_mm: 75, height_mm: 230, depth: 4, cap: 16, baseStock: 20, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [12,15,13,10,14,11,13], color: "#E8F5E9" },
-      { row: 1, jan: "4902705011625", name: "森永おいしい牛乳 1L", maker: "森永乳業", price: 248, costRate: 73, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 3, cap: 9, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [10,12,11,9,13,10,11], color: "#E3F2FD" },
-      { row: 1, jan: "4902220113514", name: "よつ葉特選牛乳 1L", maker: "よつ葉乳業", price: 298, costRate: 68, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 8, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,4,5,7,5,6], color: "#FFF3E0" },
-      { row: 1, jan: "4908011401136", name: "タカナシ低温殺菌牛乳", maker: "タカナシ乳業", price: 328, costRate: 65, rank: "C", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 6, currentStock: 3, orderPoint: 2, orderQty: 0, inventoryDays: 2.5, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [3,4,5,4,6,5,4], color: "#F3E5F5" },
-      { row: 1, jan: "4902720109123", name: "明治おいしい低脂肪乳", maker: "明治", price: 218, costRate: 74, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 8, currentStock: 2, orderPoint: 3, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [2,3,2,1,3,2,2], color: "#E8F5E9" },
-      { row: 2, jan: "4901777303515", name: "グリコカフェオーレ 1L", maker: "グリコ", price: 178, costRate: 70, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 15, currentStock: 7, orderPoint: 5, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [14,16,13,15,17,14,15], color: "#FCE4EC" },
-      { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 5, cap: 40, baseStock: 45, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [18,20,17,19,22,18,20], color: "#E3F2FD" },
-      { row: 2, jan: "4901340032118", name: "ドトール カフェ・オ・レ", maker: "ドトール", price: 148, costRate: 67, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 10, currentStock: 3, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,8,9,7,8], color: "#EFEBE9" },
-      { row: 2, jan: "4902102114516", name: "キリン 午後の紅茶 ミルク", maker: "キリン", price: 168, costRate: 71, rank: "C", face: 2, width_mm: 65, height_mm: 145, depth: 3, cap: 12, baseStock: 12, currentStock: 4, orderPoint: 4, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#E0F7FA" },
-      { row: 2, jan: "4902705002029", name: "マウントレーニア エスプレッソ", maker: "森永乳業", price: 158, costRate: 62, rank: "C", face: 2, width_mm: 65, height_mm: 145, depth: 4, cap: 16, baseStock: 16, currentStock: 7, orderPoint: 6, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [2,3,2,2,3,2,3], color: "#E3F2FD" },
-      { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 5, cap: 30, baseStock: 35, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [22,25,20,23,27,22,24], color: "#E8F5E9" },
-      { row: 3, jan: "4902705004115", name: "ビヒダスBB536", maker: "森永乳業", price: 168, costRate: 68, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 4, cap: 24, baseStock: 25, currentStock: 10, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [12,14,11,13,15,12,13], color: "#E3F2FD" },
-      { row: 3, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 3, width_mm: 60, height_mm: 85, depth: 6, cap: 54, baseStock: 55, currentStock: 25, orderPoint: 20, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [20,22,18,21,24,20,22], color: "#FFFDE7" },
-      { row: 3, jan: "4901340035113", name: "ダノン BIO", maker: "ダノン", price: 188, costRate: 58, rank: "B", face: 2, width_mm: 60, height_mm: 85, depth: 3, cap: 18, baseStock: 18, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 2.5, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [4,5,6,5,7,5,6], color: "#FFF9C4" },
-      { row: 4, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 15, currentStock: 7, orderPoint: 6, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [13,15,12,14,16,13,14], color: "#C8E6C9" },
-      { row: 4, jan: "4902102114615", name: "トロピカーナ オレンジ 1L", maker: "キリン", price: 258, costRate: 64, rank: "B", face: 3, width_mm: 75, height_mm: 255, depth: 3, cap: 9, baseStock: 10, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,8,9,7,8], color: "#E0F7FA" },
-      { row: 4, jan: "4909411003311", name: "カゴメ トマトジュース", maker: "カゴメ", price: 168, costRate: 70, rank: "B", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 8, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,5,6,7,5,6], color: "#C8E6C9" },
-      { row: 4, jan: "4901340036115", name: "伊藤園 1日分の野菜", maker: "伊藤園", price: 178, costRate: 68, rank: "B", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 10, currentStock: 3, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [6,7,5,7,8,6,7], color: "#DCEDC8" },
-      { row: 4, jan: "4514603311211", name: "ポンジュース 1L", maker: "えひめ飲料", price: 298, costRate: 60, rank: "C", face: 1, width_mm: 75, height_mm: 255, depth: 3, cap: 3, baseStock: 6, currentStock: 2, orderPoint: 2, orderQty: 0, inventoryDays: 3.0, leadTime: 2, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [3,4,3,4,5,3,4], color: "#FFF9C4" },
-      { row: 4, jan: "4902102114712", name: "キリン 生茶 2L", maker: "キリン", price: 168, costRate: 72, rank: "C", face: 1, width_mm: 105, height_mm: 310, depth: 3, cap: 3, baseStock: 8, currentStock: 5, orderPoint: 3, orderQty: 0, inventoryDays: 3.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,4,5,6,4,5], color: "#E0F7FA" },
-    ],
-    promotionalSlots: [
-      { slotId: "PS-01", row: 2, jan: "4901777303515", periodStart: "2025-03-01", periodEnd: "2025-03-31", theme: "グリコカフェオーレフェア", changeType: "feature", instructions: "エンド連動POP設置。3月末で通常陳列に戻す", targetPi: 15.0, targetWeekRevenue: 5000 },
-      { slotId: "PS-02", row: 3, jan: "4902720100014", periodStart: "2025-03-01", periodEnd: "2025-03-15", theme: "ヨーグルト特売", changeType: "seasonal", instructions: "チラシ連動。特売POP・プライスカード差替", targetPi: 20.0, targetWeekRevenue: 8000 },
-    ],
-  },
-
-  "A-02": {
-    fixtureId: "A-02",
-    fixtureType: "gondola",
-    aisleId: "A",
-    position: 2,
-    category: "114",
-    categoryName: "乳製品・デザート",
-    rows: 4,
-    shelfWidthMm: 900,
-    rowHeights: { 1: 280, 2: 300, 3: 280, 4: 320 },
-    products: [
-      { row: 1, jan: "4902720113214", name: "雪印メグミルク牛乳 1L", maker: "雪印メグミルク", price: 228, costRate: 72, rank: "A", face: 4, width_mm: 75, height_mm: 255, depth: 3, cap: 12, baseStock: 20, currentStock: 9, orderPoint: 7, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [14,16,15,13,17,14,15], color: "#E3F2FD" },
-      { row: 1, jan: "4902705090514", name: "恵 megumi ガセリ菌SP", maker: "雪印メグミルク", price: 138, costRate: 58, rank: "A", face: 3, width_mm: 60, height_mm: 85, depth: 5, cap: 30, baseStock: 30, currentStock: 14, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [18,20,17,19,21,18,19], color: "#E8F5E9" },
-      { row: 1, jan: "4902705090716", name: "LG21 プロビオ", maker: "明治", price: 148, costRate: 56, rank: "A", face: 3, width_mm: 50, height_mm: 130, depth: 6, cap: 36, baseStock: 35, currentStock: 16, orderPoint: 12, orderQty: 0, inventoryDays: 1.3, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [16,18,15,17,20,16,17], color: "#E8F5E9" },
-      { row: 2, jan: "4902705090817", name: "パルテノ 濃密ギリシャ", maker: "森永乳業", price: 178, costRate: 60, rank: "B", face: 3, width_mm: 90, height_mm: 80, depth: 4, cap: 24, baseStock: 24, currentStock: 11, orderPoint: 9, orderQty: 0, inventoryDays: 1.7, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [10,12,11,10,13,11,11], color: "#E3F2FD" },
-      { row: 2, jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, costRate: 58, rank: "A", face: 3, width_mm: 55, height_mm: 170, depth: 5, cap: 30, baseStock: 30, currentStock: 13, orderPoint: 10, orderQty: 0, inventoryDays: 1.4, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [18,20,17,18,22,18,19], color: "#E8F5E9" },
-      { row: 2, jan: "4902705091019", name: "カルピスウォーター 500ml", maker: "アサヒ飲料", price: 138, costRate: 68, rank: "B", face: 2, width_mm: 65, height_mm: 210, depth: 4, cap: 8, baseStock: 10, currentStock: 4, orderPoint: 3, orderQty: 0, inventoryDays: 2.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,3,4,5,4,4], color: "#E0F7FA" },
-      { row: 2, jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, costRate: 62, rank: "B", face: 2, width_mm: 65, height_mm: 200, depth: 4, cap: 8, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [5,6,4,5,6,5,5], color: "#F3E5F5" },
-      { row: 3, jan: "4902705090118", name: "ピルクル400 65ml×8", maker: "日清ヨーク", price: 198, costRate: 62, rank: "B", face: 2, width_mm: 100, height_mm: 95, depth: 4, cap: 16, baseStock: 18, currentStock: 8, orderPoint: 6, orderQty: 0, inventoryDays: 1.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [7,8,6,7,9,7,7], color: "#FFF3E0" },
-      { row: 3, jan: "4902705090211", name: "十勝のむヨーグルト", maker: "よつ葉乳業", price: 168, costRate: 65, rank: "B", face: 2, width_mm: 65, height_mm: 200, depth: 4, cap: 8, baseStock: 14, currentStock: 6, orderPoint: 5, orderQty: 0, inventoryDays: 1.6, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [6,7,5,6,8,6,6], color: "#FFF3E0" },
-      { row: 3, jan: "4902705090312", name: "雪印メグミルク純牛乳", maker: "雪印メグミルク", price: 218, costRate: 72, rank: "A", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 1.9, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [5,6,5,5,7,5,6], color: "#E3F2FD" },
-      { row: 4, jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, costRate: 55, rank: "A", face: 3, width_mm: 50, height_mm: 130, depth: 6, cap: 36, baseStock: 40, currentStock: 18, orderPoint: 14, orderQty: 0, inventoryDays: 1.1, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [20,24,18,22,26,20,23], color: "#E8F5E9" },
-      { row: 4, jan: "4902720119318", name: "ダノンオイコス プレーン", maker: "ダノン", price: 168, costRate: 58, rank: "B", face: 2, width_mm: 80, height_mm: 100, depth: 3, cap: 9, baseStock: 12, currentStock: 5, orderPoint: 4, orderQty: 0, inventoryDays: 2.1, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [4,5,4,4,6,4,5], color: "#E8F5E9" },
-      { row: 4, jan: "4902705007628", name: "雪印メグミルク 3.6牛乳", maker: "雪印メグミルク", price: 208, costRate: 70, rank: "A", face: 2, width_mm: 75, height_mm: 255, depth: 3, cap: 6, baseStock: 15, currentStock: 7, orderPoint: 5, orderQty: 0, inventoryDays: 1.7, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: null, salesWeek: [8,9,7,8,10,8,8], color: "#E3F2FD" },
-    ],
-    promotionalSlots: [],
-  },
-
-  "END-A-L": {
-    fixtureId: "END-A-L",
-    fixtureType: "endcap",
-    aisleId: "A",
-    side: "left",
-    widthMm: 600,
-    rows: 5,
-    rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
-    periodStart: "2025-03-01",
-    periodEnd: "2025-03-31",
-    theme: "春の新生活キャンペーン",
-    products: [
-      { row: 1, jan: "4902720109116", name: "明治おいしい牛乳 900ml", maker: "明治", price: 268, costRate: 72, rank: "A", face: 3, width_mm: 75, height_mm: 230, depth: 4, cap: 12, baseStock: 30, currentStock: 12, orderPoint: 10, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [18,22,20,18,24,20,22], color: "#E8F5E9" },
-      { row: 2, jan: "4902705002012", name: "マウントレーニア カフェラッテ", maker: "森永乳業", price: 158, costRate: 62, rank: "A", face: 4, width_mm: 65, height_mm: 145, depth: 6, cap: 48, baseStock: 50, currentStock: 22, orderPoint: 18, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [25,28,24,26,30,25,28], color: "#E3F2FD" },
-      { row: 3, jan: "4902720100014", name: "明治ブルガリアヨーグルト", maker: "明治", price: 178, costRate: 66, rank: "A", face: 3, width_mm: 100, height_mm: 95, depth: 6, cap: 36, baseStock: 40, currentStock: 18, orderPoint: 15, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "チラシ", salesWeek: [28,32,26,30,34,28,31], color: "#E8F5E9" },
-      { row: 4, jan: "4903015011116", name: "ヤクルト ソフール", maker: "ヤクルト", price: 98, costRate: 60, rank: "A", face: 4, width_mm: 60, height_mm: 85, depth: 8, cap: 96, baseStock: 80, currentStock: 35, orderPoint: 30, orderQty: 0, inventoryDays: 0.8, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [30,35,28,32,38,30,34], color: "#FFFDE7" },
-      { row: 5, jan: "4909411003215", name: "カゴメ 野菜生活100", maker: "カゴメ", price: 198, costRate: 69, rank: "A", face: 3, width_mm: 75, height_mm: 255, depth: 4, cap: 12, baseStock: 20, currentStock: 8, orderPoint: 8, orderQty: 0, inventoryDays: 1.5, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "販促", salesWeek: [18,20,16,19,22,18,20], color: "#C8E6C9" },
-    ],
-  },
-
-  "END-A-R": {
-    fixtureId: "END-A-R",
-    fixtureType: "endcap",
-    aisleId: "A",
-    side: "right",
-    widthMm: 600,
-    rows: 5,
-    rowHeights: { 1: 360, 2: 340, 3: 340, 4: 340, 5: 340 },
-    periodStart: "2025-03-15",
-    periodEnd: "2025-04-15",
-    theme: "新商品お試しフェア",
-    products: [
-      { row: 1, jan: "4902705090918", name: "明治 ザバス ミルクプロテイン", maker: "明治", price: 178, costRate: 58, rank: "A", face: 4, width_mm: 55, height_mm: 170, depth: 5, cap: 40, baseStock: 40, currentStock: 15, orderPoint: 12, orderQty: 0, inventoryDays: 1.2, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [15,18,14,16,20,15,17], color: "#E8F5E9" },
-      { row: 2, jan: "4902705090615", name: "R-1 ドリンクタイプ", maker: "明治", price: 138, costRate: 55, rank: "A", face: 4, width_mm: 50, height_mm: 130, depth: 6, cap: 48, baseStock: 45, currentStock: 20, orderPoint: 16, orderQty: 0, inventoryDays: 1.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [20,24,18,22,26,20,23], color: "#E8F5E9" },
-      { row: 3, jan: "4902705091120", name: "のむヨーグルト ブルーベリー", maker: "明治", price: 148, costRate: 62, rank: "B", face: 3, width_mm: 65, height_mm: 200, depth: 4, cap: 12, baseStock: 15, currentStock: 6, orderPoint: 5, orderQty: 0, inventoryDays: 2.0, leadTime: 1, minOrderUnit: 1, stockCorrection: 0, tag: "新商品", salesWeek: [8,10,7,9,12,8,10], color: "#F3E5F5" },
-    ],
-  },
-};
+// Note: Real product data comes from FIXTURES
 
 
 
@@ -588,25 +479,34 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
 const getDcsSummaryByCategory = () => {
   const summary = {};
   // DCS_PROPOSALSの各提案のJANコードからカテゴリを特定
-  // 現在はSHELF_DATA_111のみなのでカテゴリ111に紐づけ
-  const allProducts = SHELF_DATA_111.products;
   DCS_PROPOSALS.forEach(prop => {
-    const product = allProducts.find(p => p.jan === prop.jan);
-    if (product) {
-      const catId = SHELF_DATA_111.category;
-      if (!summary[catId]) summary[catId] = { cut: 0, faceChange: 0, swap: 0, total: 0, items: [] };
-      if (prop.action === "カット") summary[catId].cut++;
-      else if (prop.action === "フェース減" || prop.action === "フェース増") summary[catId].faceChange++;
-      summary[catId].total++;
-      summary[catId].items.push({ ...prop, productName: product.name });
+    // Find product in fixtures
+    let product = null;
+    let departmentKey = null;
+
+    for (const [key, fixture] of Object.entries(FIXTURES)) {
+      const found = fixture.products?.find(p => p.jan === prop.jan);
+      if (found) {
+        product = found;
+        departmentKey = fixture.department;
+        break;
+      }
+    }
+
+    if (product && departmentKey) {
+      if (!summary[departmentKey]) summary[departmentKey] = { cut: 0, faceChange: 0, swap: 0, total: 0, items: [] };
+      if (prop.action === "カット") summary[departmentKey].cut++;
+      else if (prop.action === "フェース減" || prop.action === "フェース増") summary[departmentKey].faceChange++;
+      summary[departmentKey].total++;
+      summary[departmentKey].items.push({ ...prop, productName: product.name });
     }
   });
   return summary;
 };
 
 const CategorySelectScreen = ({ onSelect, onBack, showDcs }) => {
-  const grouped = {};
-  CATEGORIES.forEach(c => { if (!grouped[c.group]) grouped[c.group] = []; grouped[c.group].push(c); });
+  // Show main departments
+  const mainDepartments = CATEGORIES;
   const dcsSummary = showDcs ? getDcsSummaryByCategory() : {};
 
   return (
@@ -629,61 +529,70 @@ const CategorySelectScreen = ({ onSelect, onBack, showDcs }) => {
         </div>
       )}
 
-      {Object.entries(grouped).map(([group, cats]) => (
-        <div key={group} style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0891B2", marginBottom: 6, paddingLeft: 4 }}>{group}</div>
-          {cats.map(c => {
-            const dcs = dcsSummary[c.id];
-            const hasDcs = showDcs && dcs && dcs.total > 0;
-            return (
-              <button key={c.id} onClick={() => onSelect(c.id)} style={{
-                display: "block", width: "100%", textAlign: "left", padding: "12px 14px",
-                background: hasDcs ? "#FFF7ED" : "#FFF",
-                border: hasDcs ? "2px solid #FB923C" : "1px solid #E2E8F0",
-                borderRadius: 8, marginBottom: 6, cursor: "pointer", fontSize: 14, color: "#1B2A4A",
-                boxShadow: hasDcs ? "0 2px 8px rgba(251,146,60,0.15)" : "0 1px 2px rgba(0,0,0,0.04)",
-                transition: "all 0.15s"
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <span style={{ color: "#94A3B8", marginRight: 8 }}>{c.id}:</span>{c.name}
-                  </div>
-                  {hasDcs && (
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 8 }}>
-                      {dcs.cut > 0 && (
-                        <span style={{ background: "#DC2626", color: "#FFF", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>
-                          カット {dcs.cut}件
-                        </span>
-                      )}
-                      {dcs.faceChange > 0 && (
-                        <span style={{ background: "#D97706", color: "#FFF", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>
-                          F変更 {dcs.faceChange}件
-                        </span>
-                      )}
-                    </div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "#0891B2", marginBottom: 6, paddingLeft: 4 }}>部門一覧</div>
+      {mainDepartments.map(c => {
+        const gondolaCodes = c.gondolaCodes || [];
+        const dcs = dcsSummary[c.id];
+        const hasDcs = showDcs && dcs && dcs.total > 0;
+
+        // Calculate aggregated sales/profit for department
+        let totalSales = 0, totalProfit = 0;
+        gondolaCodes.forEach(gCode => {
+          const fixture = FIXTURES[gCode];
+          if (fixture) {
+            totalSales += fixture.totalSales || 0;
+            totalProfit += fixture.totalProfit || 0;
+          }
+        });
+
+        return (
+          <button key={c.id} onClick={() => onSelect(c.id)} style={{
+            display: "block", width: "100%", textAlign: "left", padding: "14px 16px",
+            background: hasDcs ? "#FFF7ED" : "#FFF",
+            border: hasDcs ? "2px solid #FB923C" : "1px solid #E2E8F0",
+            borderRadius: 10, marginBottom: 8, cursor: "pointer", fontSize: 14, color: "#1B2A4A",
+            boxShadow: hasDcs ? "0 2px 8px rgba(251,146,60,0.15)" : "0 1px 2px rgba(0,0,0,0.04)",
+            transition: "all 0.15s"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
+              {hasDcs && (
+                <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                  {dcs.cut > 0 && (
+                    <span style={{ background: "#DC2626", color: "#FFF", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>
+                      カット {dcs.cut}件
+                    </span>
+                  )}
+                  {dcs.faceChange > 0 && (
+                    <span style={{ background: "#D97706", color: "#FFF", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>
+                      F変更 {dcs.faceChange}件
+                    </span>
                   )}
                 </div>
-                {hasDcs && (
-                  <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {dcs.items.slice(0, 4).map((item, i) => (
-                      <span key={i} style={{
-                        fontSize: 9, padding: "2px 6px", borderRadius: 4,
-                        background: item.action === "カット" ? "#FEE2E2" : item.action === "フェース増" ? "#DBEAFE" : "#FEF3C7",
-                        color: item.action === "カット" ? "#991B1B" : item.action === "フェース増" ? "#1E40AF" : "#92400E"
-                      }}>
-                        {item.action}: {item.productName.length > 10 ? item.productName.slice(0, 10) + "…" : item.productName}
-                      </span>
-                    ))}
-                    {dcs.items.length > 4 && (
-                      <span style={{ fontSize: 9, color: "#94A3B8", padding: "2px 4px" }}>他{dcs.items.length - 4}件</span>
-                    )}
-                  </div>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: "#64748B" }}>
+              ゴンドラ: {gondolaCodes.length}本 | 売上: ¥{totalSales.toLocaleString()} | 利益: ¥{totalProfit.toLocaleString()}
+            </div>
+            {hasDcs && (
+              <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                {dcs.items.slice(0, 3).map((item, i) => (
+                  <span key={i} style={{
+                    fontSize: 9, padding: "2px 6px", borderRadius: 4,
+                    background: item.action === "カット" ? "#FEE2E2" : item.action === "フェース増" ? "#DBEAFE" : "#FEF3C7",
+                    color: item.action === "カット" ? "#991B1B" : item.action === "フェース増" ? "#1E40AF" : "#92400E"
+                  }}>
+                    {item.action}: {item.productName.length > 10 ? item.productName.slice(0, 10) + "…" : item.productName}
+                  </span>
+                ))}
+                {dcs.items.length > 3 && (
+                  <span style={{ fontSize: 9, color: "#94A3B8", padding: "2px 4px" }}>他{dcs.items.length - 3}件</span>
                 )}
-              </button>
-            );
-          })}
-        </div>
-      ))}
+              </div>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -696,13 +605,17 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const { brand, features, terms } = tenant;
   const tc = brand.colors;
 
-  const [currentFixtureId, setCurrentFixtureId] = useState("A-01");
-  const aisle = AISLE_LAYOUT;
-  const currentFixture = FIXTURES[currentFixtureId] || FIXTURES["A-01"];
+  // Get the department and initial fixture from route data
+  const departmentKey = data?.departmentKey || Object.keys(DEPARTMENTS)[0];
+  const gondolaCodes = DEPARTMENTS[departmentKey] || [];
+  const initialFixtureId = gondolaCodes[0] || null;
+
+  const [currentFixtureId, setCurrentFixtureId] = useState(initialFixtureId);
+  const currentFixture = currentFixtureId ? FIXTURES[currentFixtureId] : null;
   
   const [viewMode, setViewMode] = useState("shelf");
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState(currentFixture.products || []);
+  const [products, setProducts] = useState(currentFixture?.products || []);
   const [deletedProducts, setDeletedProducts] = useState([]); // カット済み商品
   const [detailTab, setDetailTab] = useState("order");
   const [orderMemo, setOrderMemo] = useState("");
@@ -1303,29 +1216,33 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
         </div>
       )}
 
+      {/* Store Info Header */}
+      <div style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "8px 12px", fontSize: 11, color: "#64748B" }}>
+        {storeData.company} {storeData.storeName}店 | 実績期間: {new Date(storeData.periodFrom.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString("ja-JP")} - {new Date(storeData.periodTo.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')).toLocaleDateString("ja-JP")} ({storeData.periodDays}日間)
+      </div>
+
       {/* Fixture Selector Row */}
       <div style={{ display: "flex", background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", flexShrink: 0, overflowX: "auto", padding: "8px 12px", gap: 8, alignItems: "center" }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", minWidth: 60 }}>什器:</span>
-        {[...aisle.gondolas, ...aisle.endCaps].map(fid => {
-          const fixture = FIXTURES[fid.fixtureId];
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", minWidth: 60 }}>ゴンドラ:</span>
+        {gondolaCodes.map(gondolaCode => {
+          const fixture = FIXTURES[gondolaCode];
           if (!fixture) return null;
-          const isGondola = fixture.fixtureType === "gondola";
-          const label = isGondola ? fixture.categoryName : `${fixture.side === "left" ? "左" : "右"}エンド`;
+          const categoryLabel = fixture.categoryLabel || `${fixture.categories?.join(' / ') || gondolaCode}`;
           return (
-            <button key={fid.fixtureId} onClick={() => setCurrentFixtureId(fid.fixtureId)} style={{
-              padding: "6px 14px", borderRadius: 20, border: currentFixtureId === fid.fixtureId ? "2px solid #0891B2" : "1px solid #CBD5E1",
-              background: currentFixtureId === fid.fixtureId ? "#DBEAFE" : "#FFF",
-              color: currentFixtureId === fid.fixtureId ? "#0891B2" : "#64748B",
-              cursor: "pointer", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
+            <button key={gondolaCode} onClick={() => setCurrentFixtureId(gondolaCode)} style={{
+              padding: "6px 14px", borderRadius: 20, border: currentFixtureId === gondolaCode ? "2px solid #0891B2" : "1px solid #CBD5E1",
+              background: currentFixtureId === gondolaCode ? "#DBEAFE" : "#FFF",
+              color: currentFixtureId === gondolaCode ? "#0891B2" : "#64748B",
+              cursor: "pointer", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
               transition: "all 0.2s"
-            }}>{label}</button>
+            }}>{gondolaCode} {categoryLabel}</button>
           );
         })}
       </div>
 
       {/* View mode tabs - context-dependent */}
       <div style={{ display: "flex", background: "#FFF", borderBottom: "1px solid #E2E8F0", flexShrink: 0, overflowX: "auto" }}>
-        {(currentFixture.fixtureType === "gondola" ? [
+        {(currentFixture?.fixtureType === "gondola" ? [
           { key: "shelf", label: "棚割" },
           { key: "list", label: "一覧" },
           { key: "priority", label: "重点" },
@@ -2354,6 +2271,7 @@ export default function App() {
   const [showDcs, setShowDcs] = useState(false);
   const [dcsProcessed, setDcsProcessed] = useState({ cut: 0, face: 0, total: 0 });
   const [dcsTaskDone, setDcsTaskDone] = useState({});
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   // テナント設定に応じてページタイトルを動的設定
   useEffect(() => {
@@ -2368,10 +2286,13 @@ export default function App() {
       }} />;
     }
     if (screen === "category-select") {
-      return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={() => setScreen("shelf-view")} showDcs={showDcs} />;
+      return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={(dept) => {
+        setSelectedDepartment(dept);
+        setScreen("shelf-view");
+      }} showDcs={showDcs} />;
     }
     if (screen === "shelf-view") {
-      return <ShelfViewScreen data={FIXTURES["A-01"]} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
+      return <ShelfViewScreen data={{ departmentKey: selectedDepartment }} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
         onDcsProcessedChange={setDcsProcessed} onDcsTaskDoneChange={setDcsTaskDone} dcsTaskDone={dcsTaskDone} />;
     }
     return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={() => {}} />;
