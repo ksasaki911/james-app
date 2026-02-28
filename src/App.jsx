@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+import tenantConfig from "./config/tenant.json";
+
+// ============================================================
+// TENANT CONFIG CONTEXT
+// ============================================================
+const TenantContext = createContext(tenantConfig);
+const useTenant = () => useContext(TenantContext);
 
 // ============================================================
 // DATA
@@ -356,6 +363,10 @@ const AddProductDialog = ({ row, candidates, existingJans, onAdd, onClose, shelf
 // ============================================================
 
 const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
+  const tenant = useTenant();
+  const { brand, features, terms, operationMode } = tenant;
+  const c = brand.colors;
+
   const cutCount = DCS_PROPOSALS.filter(d => d.action === "カット").length;
   const faceChangeCount = DCS_PROPOSALS.filter(d => d.action === "フェース減" || d.action === "フェース増").length;
   const totalDcs = DCS_PROPOSALS.length;
@@ -366,24 +377,50 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
   const allProcessed = cutRemaining <= 0 && faceRemaining <= 0;
   const allDone = done["カット指示"] && done["フェーシング変更"];
 
+  // DCSモード用メニュー
+  const dcsMenuItems = [
+    { label: terms.portal.normalOrder, icon: "📦", desc: "棚割ベースの通常発注", action: () => onNavigate("category-select"), color: c.primary },
+    { label: "特売発注", icon: "🏷️", desc: "特売・チラシ商品の発注", action: null, color: "#7C3AED" },
+    { label: terms.portal.shelfManagement, icon: "📐", desc: "棚割の確認・修正", action: () => onNavigate("category-select"), color: c.success },
+    { label: terms.portal.dcsProposal, icon: "🤖", desc: `AI提案の承認${allDone ? "（完了）" : proc.total > 0 ? ` (残${totalDcs - proc.total}件)` : ` (${totalDcs}件)`}`, action: () => onNavigate("category-select-dcs"), badge: allDone ? 0 : totalDcs - proc.total, color: c.danger },
+    { label: "商品台帳", icon: "📋", desc: "商品マスタ参照", action: null, color: "#64748B" },
+    { label: "企画販促", icon: "📢", desc: "販促企画の確認", action: null, color: c.warning },
+    { label: "販売支援", icon: "💬", desc: "接客・販売サポート", action: null, color: "#64748B" },
+    { label: "終了", icon: "🚪", desc: "", action: null, color: "#64748B" },
+  ];
+
+  // 非DCS（マニュアル/アシスト）モード用メニュー
+  const manualMenuItems = [
+    { label: terms.portal.shelfManagement, icon: "📐", desc: "棚割の確認・編集・カット・導入", action: () => onNavigate("category-select"), color: c.primary },
+    { label: terms.portal.normalOrder, icon: "📦", desc: "棚割ベースの補充発注", action: () => onNavigate("category-select"), color: c.success },
+    { label: terms.portal.changeHistory, icon: "📝", desc: "棚割変更の履歴確認", action: null, color: "#6366F1" },
+    { label: terms.portal.instruction, icon: "📄", desc: "店舗への棚割指示書", action: null, color: c.warning },
+    { label: terms.portal.categoryAnalysis, icon: "📊", desc: "カテゴリ別売上・効率分析", action: null, color: "#8B5CF6" },
+    { label: terms.portal.paramSettings, icon: "⚙️", desc: "発注パラメータ設定", action: null, color: "#64748B" },
+    { label: terms.portal.masterMaintenance, icon: "📋", desc: "商品マスタ参照・管理", action: null, color: "#64748B" },
+    { label: "終了", icon: "🚪", desc: "", action: null, color: "#64748B" },
+  ];
+
+  const menuItems = features.dcs ? dcsMenuItems : manualMenuItems;
+
   return (
-    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto", minHeight: "100vh", background: "#F8FAFC" }}>
-      {/* トップバー - JAMES ブランド（ダーク維持） */}
-      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", borderRadius: 16, padding: "18px 22px", marginBottom: 20, boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}>
+    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto", minHeight: "100vh", background: c.background }}>
+      {/* トップバー - ブランド（ダーク維持） */}
+      <div style={{ background: `linear-gradient(135deg, ${c.dark} 0%, ${c.darkGrad} 100%)`, borderRadius: 16, padding: "18px 22px", marginBottom: 20, boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ display: "flex", gap: 3, marginBottom: 4 }}>
-              {"JAMES".split("").map((c, i) => (
-                <span key={i} style={{
-                  fontSize: 28, fontWeight: 900, lineHeight: 1,
-                  color: ["#0891B2", "#06B6D4", "#22D3EE", "#67E8F9", "#A5F3FC"][i]
-                }}>{c}</span>
-              ))}
+              {brand.nameLetterColors
+                ? brand.name.split("").map((ch, i) => (
+                    <span key={i} style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: brand.nameLetterColors[i % brand.nameLetterColors.length] }}>{ch}</span>
+                  ))
+                : <span style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: c.primary }}>{brand.name}</span>
+              }
             </div>
-            <div style={{ fontSize: 9, color: "#475569", letterSpacing: 1.5 }}>J-MARUEI AI MERCHANDISING ENHANCEMENT SYSTEM</div>
+            <div style={{ fontSize: 9, color: "#475569", letterSpacing: 1.5 }}>{brand.subtitle.toUpperCase()}</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 13, color: "#FFF", fontWeight: 600 }}>{userName}</div>
+            <div style={{ fontSize: 13, color: c.headerText, fontWeight: 600 }}>{userName}</div>
             <div style={{ fontSize: 11, color: "#64748B" }}>
               {new Date().toLocaleDateString("ja-JP")} {new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
             </div>
@@ -391,78 +428,104 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
         </div>
       </div>
 
-      {/* DCS指示サマリーバー（白地） */}
-      {totalDcs > 0 && (
+      {/* DCS指示サマリーバー（DCSモード時のみ） */}
+      {features.dcs && totalDcs > 0 && (
         <div style={{ background: allDone ? "#F0FDF4" : "#FFF", border: `1px solid ${allDone ? "#BBF7D0" : "#E2E8F0"}`, borderRadius: 14, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#1E293B" }}>
-              {allDone ? "DCS指示（全作業完了）" : allProcessed ? "DCS指示（処理済・確認待ち）" : "DCS指示（未処理あり）"}
+              {allDone ? `${terms.dcsProposal}（全作業完了）` : allProcessed ? `${terms.dcsProposal}（処理済・確認待ち）` : `${terms.dcsProposal}（未処理あり）`}
             </div>
             <div style={{ fontSize: 11, color: "#64748B" }}>
               合計 {totalDcs}件
-              {proc.total > 0 && <span style={{ color: "#059669", fontWeight: 600 }}> / 処理済{proc.total}件</span>}
+              {proc.total > 0 && <span style={{ color: c.success, fontWeight: 600 }}> / 処理済{proc.total}件</span>}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {cutCount > 0 && (
               <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: cutRemaining <= 0 ? "#F0FDF4" : "#FEF2F2", border: `1px solid ${cutRemaining <= 0 ? "#BBF7D0" : "#FECACA"}`, borderRadius: 10, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: cutRemaining <= 0 ? "#059669" : "#DC2626" }}>{cutCount}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: cutRemaining <= 0 ? "#065F46" : "#991B1B" }}>カット指示</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: cutRemaining <= 0 ? c.success : c.danger }}>{cutCount}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: cutRemaining <= 0 ? "#065F46" : "#991B1B" }}>{terms.cut}指示</div>
                 {cutRemaining > 0
-                  ? <div style={{ fontSize: 9, color: "#DC2626", marginTop: 2 }}>残{cutRemaining}件 要対応</div>
+                  ? <div style={{ fontSize: 9, color: c.danger, marginTop: 2 }}>残{cutRemaining}件 要対応</div>
                   : done["カット指示"]
-                    ? <div style={{ fontSize: 9, color: "#059669", marginTop: 2, fontWeight: 700 }}>作業完了</div>
-                    : <div style={{ fontSize: 9, color: "#059669", marginTop: 2 }}>処理済</div>
+                    ? <div style={{ fontSize: 9, color: c.success, marginTop: 2, fontWeight: 700 }}>作業完了</div>
+                    : <div style={{ fontSize: 9, color: c.success, marginTop: 2 }}>処理済</div>
                 }
               </div>
             )}
             {faceChangeCount > 0 && (
               <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: faceRemaining <= 0 ? "#EFF6FF" : "#FFFBEB", border: `1px solid ${faceRemaining <= 0 ? "#BFDBFE" : "#FDE68A"}`, borderRadius: 10, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: faceRemaining <= 0 ? "#0284C7" : "#D97706" }}>{faceChangeCount}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: faceRemaining <= 0 ? "#1E40AF" : "#92400E" }}>フェーシング変更</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: faceRemaining <= 0 ? c.primary : c.warning }}>{faceChangeCount}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: faceRemaining <= 0 ? "#1E40AF" : "#92400E" }}>{terms.faceChange}</div>
                 {faceRemaining > 0
-                  ? <div style={{ fontSize: 9, color: "#D97706", marginTop: 2 }}>残{faceRemaining}件 要対応</div>
+                  ? <div style={{ fontSize: 9, color: c.warning, marginTop: 2 }}>残{faceRemaining}件 要対応</div>
                   : done["フェーシング変更"]
-                    ? <div style={{ fontSize: 9, color: "#0284C7", marginTop: 2, fontWeight: 700 }}>作業完了</div>
-                    : <div style={{ fontSize: 9, color: "#0284C7", marginTop: 2 }}>処理済</div>
+                    ? <div style={{ fontSize: 9, color: c.primary, marginTop: 2, fontWeight: 700 }}>作業完了</div>
+                    : <div style={{ fontSize: 9, color: c.primary, marginTop: 2 }}>処理済</div>
                 }
               </div>
             )}
             <div onClick={() => onNavigate("category-select-dcs")} style={{ flex: 1, background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 10, padding: "10px 10px", cursor: "pointer", transition: "all 0.15s" }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: "#6366F1" }}>0</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#4338CA" }}>商品入替</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#4338CA" }}>{terms.swapProduct}</div>
               <div style={{ fontSize: 9, color: "#64748B", marginTop: 2 }}>なし</div>
             </div>
           </div>
           {allDone ? (
-            <div style={{ marginTop: 10, background: "#D1FAE5", color: "#065F46", borderRadius: 10, padding: "8px 0", fontSize: 12, fontWeight: 700, textAlign: "center" }}>
-              全作業完了
-            </div>
+            <div style={{ marginTop: 10, background: "#D1FAE5", color: "#065F46", borderRadius: 10, padding: "8px 0", fontSize: 12, fontWeight: 700, textAlign: "center" }}>全作業完了</div>
           ) : (
-            <button onClick={() => onNavigate("category-select-dcs")} style={{ width: "100%", marginTop: 10, background: "linear-gradient(135deg, #0891B2, #06B6D4)", color: "#FFF", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(8,145,178,0.25)" }}>
-              {allProcessed ? "確認済にする →" : "DCS提案を確認・処理する →"}
+            <button onClick={() => onNavigate("category-select-dcs")} style={{ width: "100%", marginTop: 10, background: `linear-gradient(135deg, ${c.primary}, ${c.accent})`, color: "#FFF", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: `0 2px 8px ${c.primary}40` }}>
+              {allProcessed ? "確認済にする →" : `${terms.dcsProposal}を確認・処理する →`}
             </button>
           )}
         </div>
       )}
 
+      {/* 非DCSモード: カテゴリレビューサマリー */}
+      {!features.dcs && features.categoryReview && (
+        <div style={{ background: "#FFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1E293B", marginBottom: 8 }}>カテゴリレビュー状況</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ flex: 1, background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: c.danger }}>3</div>
+              <div style={{ fontSize: 10, color: "#991B1B", fontWeight: 600 }}>レビュー期限超過</div>
+            </div>
+            <div style={{ flex: 1, background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: c.warning }}>5</div>
+              <div style={{ fontSize: 10, color: "#92400E", fontWeight: 600 }}>今月レビュー予定</div>
+            </div>
+            <div style={{ flex: 1, background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: c.success }}>8</div>
+              <div style={{ fontSize: 10, color: "#065F46", fontWeight: 600 }}>レビュー済</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* カット候補サジェスト（非DCS + cutSuggestion有効時） */}
+      {!features.dcs && features.cutSuggestion && (
+        <div style={{ background: "#FFF", border: "1px solid #FECACA", borderRadius: 14, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#991B1B" }}>{terms.cut}候補アラート</div>
+            <span style={{ fontSize: 10, color: "#64748B" }}>ルールベース自動検出</span>
+          </div>
+          <div style={{ fontSize: 11, color: "#64748B", lineHeight: "18px" }}>
+            PI値がカテゴリ平均の30%以下、または4週連続売上減少の商品が <strong style={{ color: c.danger }}>5品</strong> 検出されています。
+          </div>
+          <button onClick={() => onNavigate("category-select")} style={{ width: "100%", marginTop: 8, background: `linear-gradient(135deg, ${c.primary}, ${c.accent || c.primary})`, color: "#FFF", border: "none", borderRadius: 8, padding: "8px 0", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+            棚割編集で確認する →
+          </button>
+        </div>
+      )}
+
       <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B", marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ width: 3, height: 18, background: "#0891B2", borderRadius: 2 }} />
-        MDメニュー
+        <div style={{ width: 3, height: 18, background: c.primary, borderRadius: 2 }} />
+        {features.dcs ? "MDメニュー" : "メインメニュー"}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {[
-          { label: "通常発注", icon: "📦", desc: "棚割ベースの通常発注", action: () => onNavigate("category-select"), color: "#0284C7" },
-          { label: "特売発注", icon: "🏷️", desc: "特売・チラシ商品の発注", action: null, color: "#7C3AED" },
-          { label: "棚割管理", icon: "📐", desc: "棚割の確認・修正", action: () => onNavigate("category-select"), color: "#059669" },
-          { label: "DCS提案", icon: "🤖", desc: `AI提案の承認${allDone ? "（完了）" : proc.total > 0 ? ` (残${totalDcs - proc.total}件)` : ` (${totalDcs}件)`}`, action: () => onNavigate("category-select-dcs"), badge: allDone ? 0 : totalDcs - proc.total, color: "#DC2626" },
-          { label: "商品台帳", icon: "📋", desc: "商品マスタ参照", action: null, color: "#64748B" },
-          { label: "企画販促", icon: "📢", desc: "販促企画の確認", action: null, color: "#D97706" },
-          { label: "販売支援", icon: "💬", desc: "接客・販売サポート", action: null, color: "#64748B" },
-          { label: "終了", icon: "🚪", desc: "", action: null, color: "#64748B" },
-        ].map((item, i) => (
+        {menuItems.map((item, i) => (
           <button key={i} onClick={item.action} disabled={!item.action} style={{
-            background: item.action ? "#FFF" : "#F8FAFC",
+            background: item.action ? "#FFF" : c.background,
             border: item.action ? "1px solid #E2E8F0" : "1px solid #F1F5F9",
             borderRadius: 14, padding: "16px 14px", cursor: item.action ? "pointer" : "default",
             textAlign: "left", opacity: item.action ? 1 : 0.4, position: "relative",
@@ -470,7 +533,7 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone }) => {
             transition: "all 0.2s", borderLeft: item.action ? `4px solid ${item.color}` : "4px solid transparent"
           }}>
             {item.badge > 0 && (
-              <div style={{ position: "absolute", top: 8, right: 8, background: "#DC2626", color: "#FFF", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 800, minWidth: 20, textAlign: "center", boxShadow: "0 2px 4px rgba(220,38,38,0.3)" }}>{item.badge}</div>
+              <div style={{ position: "absolute", top: 8, right: 8, background: c.danger, color: "#FFF", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 800, minWidth: 20, textAlign: "center", boxShadow: `0 2px 4px ${c.danger}4D` }}>{item.badge}</div>
             )}
             <div style={{ fontSize: 26, marginBottom: 4 }}>{item.icon}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B" }}>{item.label}</div>
@@ -590,6 +653,10 @@ const CategorySelectScreen = ({ onSelect, onBack, showDcs }) => {
 // SHELF VIEW SCREEN (main)
 // ============================================================
 const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, onDcsTaskDoneChange, dcsTaskDone: parentDcsTaskDone }) => {
+  const tenant = useTenant();
+  const { brand, features, terms } = tenant;
+  const tc = brand.colors;
+
   const [viewMode, setViewMode] = useState("shelf");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState(data.products);
@@ -1032,14 +1099,14 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#F0F4F8" }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap", borderBottom: "2px solid #0284C7" }}>
+      <div style={{ background: `linear-gradient(135deg, ${tc.dark} 0%, ${tc.darkGrad} 100%)`, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap", borderBottom: `2px solid ${tc.primary}` }}>
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={onHome} style={{ ...pillBtnStyle, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", borderRadius: 8, padding: "6px 12px" }}>TOP</button>
           <button onClick={onBack} style={{ ...pillBtnStyle, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", borderRadius: 8, padding: "6px 12px" }}>← 売場</button>
         </div>
         <div style={{ flex: 1, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 900, color: "#0891B2", letterSpacing: 1 }}>JAMES</span>
+            <span style={{ fontSize: 12, fontWeight: 900, color: tc.primary, letterSpacing: 1 }}>{brand.name}</span>
             <span style={{ color: "#334155", fontSize: 12 }}>|</span>
             <span style={{ color: "#94A3B8", fontSize: 10, fontWeight: 500 }}>什器</span>
             <span style={{ color: "#FFF", fontWeight: 800, fontSize: 15 }}>
@@ -1052,7 +1119,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
             border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: 700, transition: "all 0.2s",
             background: editMode ? "linear-gradient(135deg, #F59E0B, #D97706)" : "rgba(255,255,255,0.1)",
             color: editMode ? "#FFF" : "#CBD5E1"
-          }}>{editMode ? "編集中" : "棚割編集"}</button>
+          }}>{editMode ? "編集中" : terms.shelfEdit}</button>
           {editMode && (
             <div style={{ display: "flex", gap: 2 }}>
               <button onClick={handleUndo} disabled={!canUndo} style={{
@@ -1067,16 +1134,16 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
               }} title="やり直し">↪</button>
             </div>
           )}
-          <button onClick={() => setShowDcsPanel(!showDcsPanel)} style={{
+          {features.dcs && <button onClick={() => setShowDcsPanel(!showDcsPanel)} style={{
             border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: 700, transition: "all 0.2s",
-            background: showDcsPanel ? "linear-gradient(135deg, #0284C7, #0369A1)" : "rgba(255,255,255,0.1)",
+            background: showDcsPanel ? `linear-gradient(135deg, ${tc.primary}, ${tc.primaryDark})` : "rgba(255,255,255,0.1)",
             color: "#FFF", position: "relative"
           }}>
-            DCS
+            {terms.dcsProposal.replace("提案","").replace("指示","")}
             {dcsProposals.length > 0 && (
-              <span style={{ position: "absolute", top: -4, right: -4, background: "#DC2626", color: "#FFF", borderRadius: 8, padding: "1px 5px", fontSize: 9, fontWeight: 800, minWidth: 16, textAlign: "center" }}>{dcsProposals.length}</span>
+              <span style={{ position: "absolute", top: -4, right: -4, background: tc.danger, color: "#FFF", borderRadius: 8, padding: "1px 5px", fontSize: 9, fontWeight: 800, minWidth: 16, textAlign: "center" }}>{dcsProposals.length}</span>
             )}
-          </button>
+          </button>}
           {/* 保存メニュー */}
           <div style={{ position: "relative" }}>
             <button onClick={() => setShowSaveMenu(!showSaveMenu)} style={{
@@ -1307,13 +1374,13 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           )}
         </div>
         <button style={{
-          background: totalOrders > 0 ? "linear-gradient(135deg, #0284C7, #0891B2)" : "#334155",
+          background: totalOrders > 0 ? `linear-gradient(135deg, ${tc.primaryDark}, ${tc.primary})` : "#334155",
           color: "#FFF", border: "none", borderRadius: 10,
           padding: "10px 28px", fontWeight: 700, fontSize: 14, cursor: totalOrders > 0 ? "pointer" : "default",
-          boxShadow: totalOrders > 0 ? "0 4px 12px rgba(8,145,178,0.3)" : "none",
+          boxShadow: totalOrders > 0 ? `0 4px 12px ${tc.primary}4D` : "none",
           transition: "all 0.2s"
         }}>
-          発注確定（{totalOrders}品/{totalQty}個）
+          {terms.orderConfirm}（{totalOrders}品/{totalQty}個）
         </button>
       </div>
 
@@ -1964,21 +2031,34 @@ const tdStyle = { padding: "6px 4px", fontSize: 11, whiteSpace: "nowrap" };
 export default function App() {
   const [screen, setScreen] = useState("portal");
   const [showDcs, setShowDcs] = useState(false);
-  const [dcsProcessed, setDcsProcessed] = useState({ cut: 0, face: 0, total: 0 }); // ShelfViewScreenで処理した件数
-  const [dcsTaskDone, setDcsTaskDone] = useState({}); // 作業完了フラグ { "カット指示": true, ... }
+  const [dcsProcessed, setDcsProcessed] = useState({ cut: 0, face: 0, total: 0 });
+  const [dcsTaskDone, setDcsTaskDone] = useState({});
 
-  if (screen === "portal") {
-    return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={(s) => {
-      if (s === "category-select-dcs") { setShowDcs(true); setScreen("category-select"); }
-      else { setShowDcs(false); setScreen(s); }
-    }} />;
-  }
-  if (screen === "category-select") {
-    return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={() => setScreen("shelf-view")} showDcs={showDcs} />;
-  }
-  if (screen === "shelf-view") {
-    return <ShelfViewScreen data={SHELF_DATA_111} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
-      onDcsProcessedChange={setDcsProcessed} onDcsTaskDoneChange={setDcsTaskDone} dcsTaskDone={dcsTaskDone} />;
-  }
-  return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={() => {}} />;
+  // テナント設定に応じてページタイトルを動的設定
+  useEffect(() => {
+    document.title = `${tenantConfig.brand.name} - ${tenantConfig.brand.subtitle}`;
+  }, []);
+
+  const content = (() => {
+    if (screen === "portal") {
+      return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={(s) => {
+        if (s === "category-select-dcs") { setShowDcs(true); setScreen("category-select"); }
+        else { setShowDcs(false); setScreen(s); }
+      }} />;
+    }
+    if (screen === "category-select") {
+      return <CategorySelectScreen onBack={() => setScreen("portal")} onSelect={() => setScreen("shelf-view")} showDcs={showDcs} />;
+    }
+    if (screen === "shelf-view") {
+      return <ShelfViewScreen data={SHELF_DATA_111} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
+        onDcsProcessedChange={setDcsProcessed} onDcsTaskDoneChange={setDcsTaskDone} dcsTaskDone={dcsTaskDone} />;
+    }
+    return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onNavigate={() => {}} />;
+  })();
+
+  return (
+    <TenantContext.Provider value={tenantConfig}>
+      {content}
+    </TenantContext.Provider>
+  );
 }

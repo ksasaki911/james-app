@@ -1,0 +1,71 @@
+{
+  "tenantId": "j-maruei",
+  "brand": {
+    "name": "JAMES",
+    "nameLetterColors": ["#0891B2", "#06B6D4", "#22D3EE", "#67E8F9", "#A5F3FC"],
+    "subtitle": "J-Maruei AI Merchandising Enhancement System",
+    "logo": null,
+    "colors": {
+      "primary": "#0891B2",
+      "primaryDark": "#0369A1",
+      "accent": "#06B6D4",
+      "dark": "#0F172A",
+      "darkGrad": "#1E293B",
+      "background": "#F8FAFC",
+      "headerText": "#FFF",
+      "danger": "#DC2626",
+      "success": "#10B981",
+      "warning": "#F59E0B"
+    }
+  },
+  "operationMode": "dcs",
+  "features": {
+    "dcs": true,
+    "aiOrderSuggestion": true,
+    "profitPanel": true,
+    "chartPanel": true,
+    "jsonExport": true,
+    "jsonImport": true,
+    "productMasterSearch": true,
+    "categoryReview": false,
+    "shelfInstruction": false,
+    "cutSuggestion": false
+  },
+  "terms": {
+    "systemName": "JAMES",
+    "cut": "カット",
+    "faceIncrease": "フェース増",
+    "faceDecrease": "フェース減",
+    "faceChange": "フェース変更",
+    "orderConfirm": "発注確定",
+    "shelfEdit": "棚割編集",
+    "dcsProposal": "DCS提案",
+    "addProduct": "商品追加",
+    "swapProduct": "商品入替",
+    "restore": "復元",
+    "portal": {
+      "normalOrder": "通常発注",
+      "shelfManagement": "棚割管理",
+      "dcsProposal": "DCS提案",
+      "changeHistory": "変更履歴",
+      "instruction": "棚割指示",
+      "categoryAnalysis": "カテゴリ分析",
+      "paramSettings": "パラメータ設定",
+      "masterMaintenance": "マスタ管理"
+    }
+  },
+  "roles": {
+    "store": ["view", "order"],
+    "category": ["view", "order", "shelfEdit"],
+    "buyer": ["view", "order", "shelfEdit", "dcs", "approve", "settings"],
+    "admin": ["view", "order", "shelfEdit", "dcs", "approve", "settings", "tenantConfig"]
+  },
+  "defaults": {
+    "inventoryDays": 2.0,
+    "leadTime": 1,
+    "minOrderUnit": 1,
+    "shelfWidthMm": 900,
+    "maxFace": 6,
+    "undoLimit": 20
+  }
+}

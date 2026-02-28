@@ -1,0 +1,71 @@
+{
+  "tenantId": "sample-retail",
+  "brand": {
+    "name": "SHELF-NAVI",
+    "nameLetterColors": null,
+    "subtitle": "棚割管理・自動発注システム",
+    "logo": null,
+    "colors": {
+      "primary": "#E11D48",
+      "primaryDark": "#BE123C",
+      "accent": "#F43F5E",
+      "dark": "#1C1917",
+      "darkGrad": "#292524",
+      "background": "#FAFAF9",
+      "headerText": "#FFF",
+      "danger": "#DC2626",
+      "success": "#16A34A",
+      "warning": "#EA580C"
+    }
+  },
+  "operationMode": "manual",
+  "features": {
+    "dcs": false,
+    "aiOrderSuggestion": false,
+    "profitPanel": true,
+    "chartPanel": true,
+    "jsonExport": false,
+    "jsonImport": false,
+    "productMasterSearch": true,
+    "categoryReview": true,
+    "shelfInstruction": true,
+    "cutSuggestion": true
+  },
+  "terms": {
+    "systemName": "SHELF-NAVI",
+    "cut": "撤去",
+    "faceIncrease": "陳列数増",
+    "faceDecrease": "陳列数減",
+    "faceChange": "陳列数変更",
+    "orderConfirm": "補充オーダー",
+    "shelfEdit": "棚割編集",
+    "dcsProposal": "改廃指示",
+    "addProduct": "新規導入",
+    "swapProduct": "商品入替",
+    "restore": "復元",
+    "portal": {
+      "normalOrder": "補充発注",
+      "shelfManagement": "棚割編集",
+      "dcsProposal": "改廃指示",
+      "changeHistory": "変更履歴",
+      "instruction": "指示書一覧",
+      "categoryAnalysis": "カテゴリ分析",
+      "paramSettings": "パラメータ設定",
+      "masterMaintenance": "マスタ管理"
+    }
+  },
+  "roles": {
+    "store": ["view", "order"],
+    "category": ["view", "order", "shelfEdit"],
+    "buyer": ["view", "order", "shelfEdit", "approve", "settings"],
+    "admin": ["view", "order", "shelfEdit", "approve", "settings", "tenantConfig"]
+  },
+  "defaults": {
+    "inventoryDays": 2.0,
+    "leadTime": 1,
+    "minOrderUnit": 1,
+    "shelfWidthMm": 900,
+    "maxFace": 6,
+    "undoLimit": 20
+  }
+}
