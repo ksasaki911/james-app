@@ -1009,11 +1009,6 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       return next;
     });
     addLog(`DCS提案承認: ${proposal.action} ${proposal.jan}`);
-    // API通知（非同期、失敗しても画面には影響しない）
-    fetch(`${API_BASE}/api/dcs/proposals/approve`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jan: proposal.jan, userName: 'buyer' })
-    }).catch(e => console.warn('[DCS] approve API error:', e.message));
   };
 
   const handleDcsReject = (proposal) => {
@@ -1027,11 +1022,6 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       return next;
     });
     addLog(`DCS提案却下: ${proposal.action} ${proposal.jan}`);
-    // API通知
-    fetch(`${API_BASE}/api/dcs/proposals/reject`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jan: proposal.jan, userName: 'buyer', reason: '' })
-    }).catch(e => console.warn('[DCS] reject API error:', e.message));
   };
 
   // --- Drag & Drop (配列順序を実際に並び替え) ---
