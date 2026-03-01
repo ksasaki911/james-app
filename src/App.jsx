@@ -1483,14 +1483,33 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           const fixture = FIXTURES[gondolaCode];
           if (!fixture) return null;
           const categoryLabel = fixture.categoryLabel || `${fixture.categories?.join(' / ') || gondolaCode}`;
+          const isActive = currentFixtureId === gondolaCode;
+          // DCS提案の集計（このゴンドラに対する提案）
+          const gcDcs = DCS_PROPOSALS.filter(d => d.fixtureId === gondolaCode);
+          const gcCut = gcDcs.filter(d => d.action === "カット").length;
+          const gcFace = gcDcs.filter(d => d.action === "フェース減" || d.action === "フェース増").length;
+          const hasCut = gcCut > 0;
+          const hasFace = gcFace > 0;
+          const hasDcs = hasCut || hasFace;
           return (
             <button key={gondolaCode} onClick={() => setCurrentFixtureId(gondolaCode)} style={{
-              padding: "6px 14px", borderRadius: 20, border: currentFixtureId === gondolaCode ? "2px solid #0891B2" : "1px solid #CBD5E1",
-              background: currentFixtureId === gondolaCode ? "#DBEAFE" : "#FFF",
-              color: currentFixtureId === gondolaCode ? "#0891B2" : "#64748B",
+              padding: "6px 14px", borderRadius: 20, position: "relative",
+              border: isActive ? "2px solid #0891B2" : hasCut ? "2px solid #DC2626" : hasFace ? "2px solid #F59E0B" : "1px solid #CBD5E1",
+              background: isActive ? "#DBEAFE" : hasCut ? "#FEF2F2" : hasFace ? "#FFFBEB" : "#FFF",
+              color: isActive ? "#0891B2" : hasCut ? "#DC2626" : hasFace ? "#B45309" : "#64748B",
               cursor: "pointer", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
               transition: "all 0.2s"
-            }}>{gondolaCode} {categoryLabel}</button>
+            }}>
+              {gondolaCode} {categoryLabel}
+              {hasDcs && !isActive && (
+                <span style={{
+                  position: "absolute", top: -5, right: -5,
+                  background: hasCut ? "#DC2626" : "#F59E0B", color: "#FFF",
+                  fontSize: 8, fontWeight: 800, borderRadius: 8, padding: "1px 5px", minWidth: 16, textAlign: "center",
+                  lineHeight: "14px"
+                }}>{gcCut > 0 ? gcCut : gcFace}</span>
+              )}
+            </button>
           );
         })}
       </div>
