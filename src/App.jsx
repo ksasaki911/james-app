@@ -1,4 +1,24 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+
+// Error Boundary to catch render errors and show them on screen
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, info) { console.error('[ErrorBoundary]', error, info); }
+  render() {
+    if (this.state.hasError) {
+      return React.createElement('div', { style: { padding: 40, fontFamily: 'monospace', background: '#FEE2E2', minHeight: '100vh' } },
+        React.createElement('h2', { style: { color: '#DC2626' } }, 'レンダリングエラー'),
+        React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: 12, color: '#1E293B', background: '#FFF', padding: 16, borderRadius: 8, marginTop: 12 } },
+          String(this.state.error?.message || this.state.error)),
+        React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: 10, color: '#64748B', marginTop: 8 } },
+          String(this.state.error?.stack || '')),
+        React.createElement('button', { onClick: () => { localStorage.clear(); window.location.reload(); }, style: { marginTop: 16, padding: '8px 20px', background: '#DC2626', color: '#FFF', border: 'none', borderRadius: 6, cursor: 'pointer' } }, 'キャッシュクリア＆リロード')
+      );
+    }
+    return this.props.children;
+  }
+}
 import tenantConfig from "./config/tenant.json";
 import { parseGondolaMaster, parseShelfPerformance, buildStoreData, exportShelfCSV, exportAllFixturesCSV, downloadCSV } from "./csv-parser.js";
 import { evaluateAllProducts, parseCandidateCSV, matchCandidates } from "./dcs-engine.js";
@@ -2704,8 +2724,10 @@ export default function App() {
   })();
 
   return (
-    <TenantContext.Provider value={tenantConfig}>
-      {content}
-    </TenantContext.Provider>
+    <ErrorBoundary>
+      <TenantContext.Provider value={tenantConfig}>
+        {content}
+      </TenantContext.Provider>
+    </ErrorBoundary>
   );
 }
