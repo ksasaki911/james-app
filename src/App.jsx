@@ -31,30 +31,36 @@ let DCS_PROPOSALS = [];
 let DCS_RESULT = null;
 
 function runDcsEngine(fixtures, periodDays) {
-  DCS_RESULT = evaluateAllProducts(fixtures, periodDays);
-  // Convert engine output to JAMES UI format
-  DCS_PROPOSALS = Object.values(DCS_RESULT.proposals).map(p => {
-    const actionMap = { cut: "カット", faceReduce: "フェース減", faceIncrease: "フェース増" };
-    const priorityMap = { rule1: "高", rule2: "高", rule3: "中", rule4: "低", faceUp: "低" };
-    return {
-      jan: p.jan,
-      name: p.name,
-      fixtureId: p.fixtureId,
-      action: actionMap[p.action] || p.action,
-      reason: p.reason,
-      piValue: p.piValue?.toFixed(2) || "0",
-      categoryAvgPi: DCS_RESULT.categoryStats[p.categoryName]?.median?.toFixed(2) || "-",
-      lifecycle: p.rule === "rule1" ? "ゼロ販" : p.rule === "rule3" ? "廃棄リスク" : "低PI",
-      priority: priorityMap[p.rule] || "中",
-      newFace: p.newFace,
-      candidates: p.candidates || [],
-      color: p.color,
-      rule: p.rule,
-      currentFace: p.currentFace,
-    };
-  });
-  console.log(`[DCS] Engine evaluated: ${DCS_PROPOSALS.length} proposals (${DCS_RESULT.summary.cut} cut, ${DCS_RESULT.summary.faceReduce} reduce, ${DCS_RESULT.summary.faceIncrease} increase)`);
-  return DCS_RESULT;
+  try {
+    DCS_RESULT = evaluateAllProducts(fixtures, periodDays);
+    DCS_PROPOSALS = Object.values(DCS_RESULT.proposals).map(p => {
+      const actionMap = { cut: "カット", faceReduce: "フェース減", faceIncrease: "フェース増" };
+      const priorityMap = { rule1: "高", rule2: "高", rule3: "中", rule4: "低", faceUp: "低" };
+      return {
+        jan: p.jan,
+        name: p.name,
+        fixtureId: p.fixtureId,
+        action: actionMap[p.action] || p.action,
+        reason: p.reason,
+        piValue: p.piValue?.toFixed(2) || "0",
+        categoryAvgPi: DCS_RESULT.categoryStats[p.categoryName]?.median?.toFixed(2) || "-",
+        lifecycle: p.rule === "rule1" ? "ゼロ販" : p.rule === "rule3" ? "廃棄リスク" : "低PI",
+        priority: priorityMap[p.rule] || "中",
+        newFace: p.newFace,
+        candidates: p.candidates || [],
+        color: p.color,
+        rule: p.rule,
+        currentFace: p.currentFace,
+      };
+    });
+    console.log(`[DCS] Engine: ${DCS_PROPOSALS.length} proposals (cut:${DCS_RESULT.summary.cut} reduce:${DCS_RESULT.summary.faceReduce} increase:${DCS_RESULT.summary.faceIncrease})`);
+    return DCS_RESULT;
+  } catch (e) {
+    console.error('[DCS] Engine error:', e);
+    DCS_PROPOSALS = [];
+    DCS_RESULT = null;
+    return null;
+  }
 }
 
 // ============================================================
@@ -842,10 +848,13 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       setSelectedProduct(null);
       setDeletedProducts([]);
       setViewMode("shelf");
+      // Update DCS proposals for this fixture
+      setDcsProposals(DCS_PROPOSALS.filter(d => d.fixtureId === currentFixtureId));
     } else {
       console.error('Fixture not found:', currentFixtureId);
       setCurrentFixture(null);
       setProducts([]);
+      setDcsProposals([]);
     }
   }, [currentFixtureId]);
 
@@ -2584,13 +2593,6 @@ export default function App() {
       });
 
       setDataLoaded(true);
-
-      // DCS提案をAPIから非同期ロード
-      loadDcsProposals().then(proposals => {
-        if (proposals.length > 0) {
-          console.log(`[DCS] ${proposals.length}件の提案をロード完了`);
-        }
-      }).catch(e => console.warn('[DCS] proposals load failed:', e.message));
 
     } catch (error) {
       console.error('Failed to load data:', error);
