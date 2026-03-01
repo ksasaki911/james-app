@@ -1543,7 +1543,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
                 editMode={editMode} onFaceChange={handleFaceChange} onDragStart={handleDragStart} onDrop={handleDrop} dragItem={dragItem}
                 onDelete={handleDeleteProduct} deletedProducts={deletedProducts} onRestore={handleRestoreProduct}
                 shelfWidthMm={currentFixture.shelfWidthMm || 900} rowHeights={currentFixture.rowHeights || {}}
-                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={currentFixture.promotionalSlots || []} />
+                onTouchStart={handleTouchStart} onAddProduct={(row) => setAddProductRow(row)} promotionalSlots={currentFixture.promotionalSlots || []} fixtureId={currentFixtureId} />
             </div>
           )}
           {!fixtureLoading && currentFixture && currentFixture.fixtureType === "endcap" && viewMode === "shelf" && (
@@ -1679,7 +1679,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
 // ============================================================
 // SHELF GRID - ゴンドラ什器風 リアルレイアウト
 // ============================================================
-const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights, onTouchStart: parentTouchStart, onAddProduct, promotionalSlots }) => {
+const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDragStart, onDrop, dragItem, onDelete, deletedProducts, onRestore, shelfWidthMm, rowHeights, onTouchStart: parentTouchStart, onAddProduct, promotionalSlots, fixtureId }) => {
   const rows = [1, 2, 3, 4];
   const totalShelfMm = shelfWidthMm || 900;
   const rh = rowHeights || { 1: 280, 2: 300, 3: 280, 4: 320 };
@@ -1753,7 +1753,7 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                     const isSelected = selected?.jan === p.jan;
                     const isLow = p.currentStock <= p.orderPoint;
                     const isDragging = dragItem?.jan === p.jan;
-                    const dcsProposal = DCS_PROPOSALS.find(d => d.jan === p.jan && d.fixtureId === currentFixtureId);
+                    const dcsProposal = DCS_PROPOSALS.find(d => d.jan === p.jan && d.fixtureId === fixtureId);
                     const isCutOrReduce = dcsProposal && (dcsProposal.action === "カット" || dcsProposal.action === "フェース減");
                     const isIncrease = dcsProposal && dcsProposal.action === "フェース増";
 
