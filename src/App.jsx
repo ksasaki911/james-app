@@ -1598,27 +1598,38 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
           // DCS提案の集計（このゴンドラに対する提案）
           const gcDcs = DCS_PROPOSALS.filter(d => d.fixtureId === gondolaCode);
           const gcCut = gcDcs.filter(d => d.action === "カット").length;
-          const gcFace = gcDcs.filter(d => d.action === "フェース減" || d.action === "フェース増").length;
+          const gcFaceReduce = gcDcs.filter(d => d.action === "フェース減").length;
+          const gcFaceIncrease = gcDcs.filter(d => d.action === "フェース増").length;
           const hasCut = gcCut > 0;
-          const hasFace = gcFace > 0;
-          const hasDcs = hasCut || hasFace;
+          const hasFaceReduce = gcFaceReduce > 0;
+          const hasDcs = hasCut || hasFaceReduce;
           return (
             <button key={gondolaCode} onClick={() => setCurrentFixtureId(gondolaCode)} style={{
               padding: "6px 14px", borderRadius: 20, position: "relative",
-              border: isActive ? "2px solid #0891B2" : hasCut ? "2px solid #DC2626" : hasFace ? "2px solid #F59E0B" : "1px solid #CBD5E1",
-              background: isActive ? "#DBEAFE" : hasCut ? "#FEF2F2" : hasFace ? "#FFFBEB" : "#FFF",
-              color: isActive ? "#0891B2" : hasCut ? "#DC2626" : hasFace ? "#B45309" : "#64748B",
+              border: isActive ? "2px solid #0891B2" : hasCut ? "2px solid #DC2626" : hasFaceReduce ? "2px solid #F59E0B" : "1px solid #CBD5E1",
+              background: isActive ? "#DBEAFE" : hasCut ? "#FEF2F2" : hasFaceReduce ? "#FFFBEB" : "#FFF",
+              color: isActive ? "#0891B2" : hasCut ? "#DC2626" : hasFaceReduce ? "#B45309" : "#64748B",
               cursor: "pointer", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
               transition: "all 0.2s"
             }}>
               {gondolaCode} {categoryLabel}
               {hasDcs && !isActive && (
-                <span style={{
-                  position: "absolute", top: -5, right: -5,
-                  background: hasCut ? "#DC2626" : "#F59E0B", color: "#FFF",
-                  fontSize: 8, fontWeight: 800, borderRadius: 8, padding: "1px 5px", minWidth: 16, textAlign: "center",
-                  lineHeight: "14px"
-                }}>{gcCut > 0 ? gcCut : gcFace}</span>
+                <div style={{ position: "absolute", top: -7, right: -5, display: "flex", gap: 2 }}>
+                  {hasCut && (
+                    <span style={{
+                      background: "#DC2626", color: "#FFF",
+                      fontSize: 8, fontWeight: 800, borderRadius: 8, padding: "1px 5px", minWidth: 16, textAlign: "center",
+                      lineHeight: "14px"
+                    }}>{gcCut}</span>
+                  )}
+                  {hasFaceReduce && (
+                    <span style={{
+                      background: "#F59E0B", color: "#FFF",
+                      fontSize: 8, fontWeight: 800, borderRadius: 8, padding: "1px 5px", minWidth: 16, textAlign: "center",
+                      lineHeight: "14px"
+                    }}>{gcFaceReduce}</span>
+                  )}
+                </div>
               )}
             </button>
           );
@@ -1884,7 +1895,8 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                     const isLow = p.currentStock <= p.orderPoint;
                     const isDragging = dragItem?.jan === p.jan;
                     const dcsProposal = DCS_PROPOSALS.find(d => d.jan === p.jan && d.fixtureId === fixtureId);
-                    const isCutOrReduce = dcsProposal && (dcsProposal.action === "カット" || dcsProposal.action === "フェース減");
+                    const isCut = dcsProposal && dcsProposal.action === "カット";
+                    const isFaceReduce = dcsProposal && dcsProposal.action === "フェース減";
                     const isIncrease = dcsProposal && dcsProposal.action === "フェース増";
 
                     return (
@@ -1900,7 +1912,7 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                           position: "relative", height: cellHeightPx,
                           width: `${widthPercent}%`, minWidth: 54, flexShrink: 0,
                           background: isDragging ? "#FEF3C7" : isSelected ? "linear-gradient(180deg, #DBEAFE 0%, #EFF6FF 100%)" : "linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)",
-                          border: isSelected ? "2px solid #0284C7" : isCutOrReduce ? "2px solid #DC2626" : isIncrease ? "2px solid #2563EB" : isLow ? "2px solid #F87171" : "1px solid #E2E8F0",
+                          border: isSelected ? "2px solid #0284C7" : isCut ? "2px solid #DC2626" : isFaceReduce ? "2px solid #F59E0B" : isIncrease ? "2px solid #2563EB" : isLow ? "2px solid #F87171" : "1px solid #E2E8F0",
                           borderRadius: 8, cursor: editMode ? "grab" : "pointer", padding: "4px 5px", textAlign: "left",
                           boxShadow: isSelected ? "0 0 0 3px rgba(2,132,199,0.15), 0 4px 12px rgba(0,0,0,0.1)" : "0 1px 3px rgba(0,0,0,0.06)",
                           transition: "all 0.2s ease", overflow: "hidden", opacity: isDragging ? 0.4 : 1
@@ -1915,8 +1927,8 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                         {maxStack > 1 && (
                           <span style={{ position: "absolute", left: 6, bottom: 2, fontSize: 7, color: "#0891B2", fontWeight: 700, opacity: 0.8 }}>×{maxStack}</span>
                         )}
-                        {/* DCS カット/フェース減 */}
-                        {isCutOrReduce && (
+                        {/* DCS カット */}
+                        {isCut && (
                           <div style={{
                             position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 7, zIndex: 2, pointerEvents: "none",
                             background: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(220,38,38,0.2) 4px, rgba(220,38,38,0.2) 6px)"
@@ -1924,7 +1936,19 @@ const ShelfGrid = ({ products, selected, onSelect, editMode, onFaceChange, onDra
                             <div style={{
                               position: "absolute", bottom: 3, left: 3, right: 3, background: "#DC2626",
                               color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 4, padding: "2px 0", letterSpacing: 0.5
-                            }}>{dcsProposal.action === "カット" ? "カット" : "F減"}</div>
+                            }}>カット</div>
+                          </div>
+                        )}
+                        {/* DCS フェース減 — オレンジ */}
+                        {isFaceReduce && (
+                          <div style={{
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 7, zIndex: 2, pointerEvents: "none",
+                            background: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(245,158,11,0.2) 4px, rgba(245,158,11,0.2) 6px)"
+                          }}>
+                            <div style={{
+                              position: "absolute", bottom: 3, left: 3, right: 3, background: "#F59E0B",
+                              color: "#FFF", fontSize: 8, fontWeight: 800, textAlign: "center", borderRadius: 4, padding: "2px 0", letterSpacing: 0.5
+                            }}>F減</div>
                           </div>
                         )}
                         {/* DCS フェース増 */}
