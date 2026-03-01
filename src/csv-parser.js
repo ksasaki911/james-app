@@ -84,6 +84,59 @@ export function parseShelfPerformance(buffer) {
   return parseCSVText(text);
 }
 
+// --- Import: 棚割実績表（ゴンドラ別売上） ---
+// ヘッダー: 企業名,店コード,店名,実績期間FROM,実績期間TO,ゴンドラコード,ゴンドラ名,
+//           総売上金額合計,定番売上金額合計,定番売上金額,定番10CM当り売上,総売上金額,定番荒利金額,総荒利金額
+
+export function parseGondolaSalesCSV(buffer) {
+  const text = decodeBuffer(buffer);
+  const records = parseCSVText(text);
+  if (records.length === 0) return null;
+
+  const first = records[0];
+  const company = getField(first, '企業名').trim();
+  const storeCode = getField(first, '店コード').trim();
+  const storeName = getField(first, '店名').trim();
+  const periodFrom = getField(first, '実績期間FROM').trim();
+  const periodTo = getField(first, '実績期間TO').trim();
+
+  let periodDays = 0;
+  if (periodFrom && periodTo) {
+    const from = new Date(periodFrom.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'));
+    const to = new Date(periodTo.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'));
+    periodDays = Math.round((to - from) / (1000 * 60 * 60 * 24));
+  }
+
+  const gondolaSales = {};
+  records.forEach(r => {
+    const code = getField(r, 'ゴンドラコード').trim();
+    if (!code) return;
+    gondolaSales[code] = {
+      gondolaName: getField(r, 'ゴンドラ名').trim(),
+      storeTotalSales: parseInt(getField(r, '総売上金額合計')) || 0,
+      storeRegularSales: parseInt(getField(r, '定番売上金額合計')) || 0,
+      regularSales: parseInt(getField(r, '定番売上金額')) || 0,
+      salesPer10cm: parseInt(getField(r, '定番10CM当り売上')) || 0,
+      totalSales: parseInt(getField(r, '総売上金額')) || 0,
+      regularProfit: parseInt(getField(r, '定番荒利金額')) || 0,
+      totalProfit: parseInt(getField(r, '総荒利金額')) || 0,
+    };
+  });
+
+  return {
+    company, storeCode, storeName, periodFrom, periodTo, periodDays,
+    gondolaCount: records.length,
+    gondolaSales,
+  };
+}
+
+// --- ゴンドラ別売上CSVかどうかを判定 ---
+export function isGondolaSalesCSV(buffer) {
+  const text = decodeBuffer(buffer);
+  const firstLine = text.split(/\r?\n/)[0] || '';
+  return firstLine.includes('ゴンドラ名') && firstLine.includes('定番10CM当り売上');
+}
+
 // --- Build store-data.json equivalent from 2 CSVs ---
 
 export function buildStoreData(masterRecords, performanceRecords) {
@@ -338,6 +391,49 @@ export function exportAllFixturesCSV(fixtures) {
     });
   });
 
+  return generateCSVString(headers, rows);
+}
+
+// --- Export: 作業ログCSV ---
+
+export function exportOperationLogCSV(logs) {
+  const headers = ['日時', 'ゴンドラ', '操作種別', 'JAN', '商品名', '変更前', '変更後', '詳細'];
+  const rows = logs.map(log => [
+    log.timestamp || log.time || '',
+    log.fixtureId || '',
+    log.actionType || '',
+    log.jan || '',
+    log.productName || '',
+    log.before || '',
+    log.after || '',
+    log.detail || log.msg || ''
+  ]);
+  return generateCSVString(headers, rows);
+}
+
+// --- Export: 変更サマリーCSV（削除・入替・フェース変更） ---
+
+export function exportChangeSummaryCSV(allChanges) {
+  const headers = [
+    'ゴンドラコード', '変更種別', 'JAN', '商品名', 'カテゴリ',
+    '変更前フェース', '変更後フェース', '売価', '日販', '売上数量',
+    '入替先JAN', '入替先商品名', '実行日時'
+  ];
+  const rows = allChanges.map(c => [
+    c.fixtureId || '',
+    c.changeType || '',
+    c.jan || '',
+    c.productName || '',
+    c.categoryName || '',
+    c.oldFace ?? '',
+    c.newFace ?? '',
+    c.price || '',
+    c.dailyAvgQty || '',
+    c.salesQty || '',
+    c.replacementJan || '',
+    c.replacementName || '',
+    c.timestamp || ''
+  ]);
   return generateCSVString(headers, rows);
 }
 

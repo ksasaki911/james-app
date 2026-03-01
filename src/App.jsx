@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 import tenantConfig from "./config/tenant.json";
-import { parseGondolaMaster, parseShelfPerformance, buildStoreData, exportShelfCSV, exportAllFixturesCSV, downloadCSV } from "./csv-parser.js";
+import { parseGondolaMaster, parseShelfPerformance, buildStoreData, exportShelfCSV, exportAllFixturesCSV, downloadCSV, parseGondolaSalesCSV, isGondolaSalesCSV, exportOperationLogCSV, exportChangeSummaryCSV } from "./csv-parser.js";
 import { evaluateAllProducts, parseCandidateCSV, matchCandidates } from "./dcs-engine.js";
 import storeDataDefault from "./data/store-data.json";
 
@@ -405,24 +405,48 @@ const AddProductDialog = ({ row, candidates, existingJans, onAdd, onClose, shelf
 };
 
 // ============================================================
-// CSV IMPORT PANEL
+// CSV IMPORT PANEL（ゴンドラ別売上CSV自動判定対応）
 // ============================================================
-const CsvImportPanel = ({ onDataImport }) => {
+const CsvImportPanel = ({ onDataImport, onGondolaSalesImport }) => {
   const [masterFile, setMasterFile] = useState(null);
   const [perfFile, setPerfFile] = useState(null);
+  const [gondolaSalesFile, setGondolaSalesFile] = useState(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState(null);
   const masterRef = useRef(null);
   const perfRef = useRef(null);
+  const gondolaSalesRef = useRef(null);
 
   const handleImport = async () => {
-    if (!masterFile && !perfFile) {
+    if (!masterFile && !perfFile && !gondolaSalesFile) {
       alert("少なくとも1つのCSVファイルを選択してください");
       return;
     }
     setImporting(true);
     setResult(null);
     try {
+      // ゴンドラ別売上CSVの場合
+      if (gondolaSalesFile) {
+        const buf = await gondolaSalesFile.arrayBuffer();
+        const salesData = parseGondolaSalesCSV(buf);
+        if (!salesData) {
+          setResult({ success: false, message: 'ゴンドラ別売上CSVの解析に失敗しました' });
+          setImporting(false);
+          return;
+        }
+        if (onGondolaSalesImport) onGondolaSalesImport(salesData);
+        setResult({
+          success: true,
+          message: `ゴンドラ別売上取込完了: ${salesData.gondolaCount}ゴンドラ`,
+          details: `${salesData.company} ${salesData.storeName} / 期間: ${salesData.periodFrom} - ${salesData.periodTo} (${salesData.periodDays}日間)`
+        });
+        setGondolaSalesFile(null);
+        if (gondolaSalesRef.current) gondolaSalesRef.current.value = '';
+        setImporting(false);
+        return;
+      }
+
+      // 従来の2ファイルインポート
       let masterRecords = [];
       let perfRecords = [];
 
@@ -464,24 +488,33 @@ const CsvImportPanel = ({ onDataImport }) => {
     }
   };
 
+  const hasFile = masterFile || perfFile || gondolaSalesFile;
+
   return (
     <div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+        <div style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", borderRadius: 8, padding: 10 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: "#0369A1", display: "block", marginBottom: 4 }}>棚割実績表（ゴンドラ別売上）CSV</label>
+          <input ref={gondolaSalesRef} type="file" accept=".csv" onChange={e => setGondolaSalesFile(e.target.files?.[0] || null)}
+            style={{ fontSize: 12, width: "100%", padding: "6px", border: "1px solid #BAE6FD", borderRadius: 6, background: "#FFF" }} />
+          <div style={{ fontSize: 10, color: "#64748B", marginTop: 4 }}>基幹から出力したゴンドラ別売上CSVをそのまま取込可能</div>
+        </div>
+        <div style={{ fontSize: 10, color: "#94A3B8", textAlign: "center", padding: "2px 0" }}>── または従来形式 ──</div>
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: "#475569", display: "block", marginBottom: 4 }}>ゴンドラ商品マスター CSV</label>
           <input ref={masterRef} type="file" accept=".csv" onChange={e => setMasterFile(e.target.files?.[0] || null)}
             style={{ fontSize: 12, width: "100%", padding: "6px", border: "1px solid #E2E8F0", borderRadius: 6, background: "#F8FAFC" }} />
         </div>
         <div>
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#475569", display: "block", marginBottom: 4 }}>棚割実績表 CSV</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#475569", display: "block", marginBottom: 4 }}>棚割実績表（商品別売上）CSV</label>
           <input ref={perfRef} type="file" accept=".csv" onChange={e => setPerfFile(e.target.files?.[0] || null)}
             style={{ fontSize: 12, width: "100%", padding: "6px", border: "1px solid #E2E8F0", borderRadius: 6, background: "#F8FAFC" }} />
         </div>
       </div>
-      <button onClick={handleImport} disabled={importing || (!masterFile && !perfFile)} style={{
-        width: "100%", padding: "10px", background: (masterFile || perfFile) ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "#E2E8F0",
-        color: (masterFile || perfFile) ? "#FFF" : "#94A3B8", border: "none", borderRadius: 8,
-        fontSize: 13, fontWeight: 700, cursor: (masterFile || perfFile) ? "pointer" : "default"
+      <button onClick={handleImport} disabled={importing || !hasFile} style={{
+        width: "100%", padding: "10px", background: hasFile ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "#E2E8F0",
+        color: hasFile ? "#FFF" : "#94A3B8", border: "none", borderRadius: 8,
+        fontSize: 13, fontWeight: 700, cursor: hasFile ? "pointer" : "default"
       }}>
         {importing ? "取込中..." : "データ取込"}
       </button>
@@ -504,7 +537,7 @@ const CsvImportPanel = ({ onDataImport }) => {
 // SCREENS
 // ============================================================
 
-const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone, onDataImport }) => {
+const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone, onDataImport, onGondolaSalesImport }) => {
   const tenant = useTenant();
   const { brand, features, terms, operationMode } = tenant;
   const c = brand.colors;
@@ -695,7 +728,7 @@ const PortalScreen = ({ onNavigate, userName, dcsProcessed, dcsTaskDone, onDataI
           <div style={{ fontSize: 11, color: "#64748B", marginBottom: 12, lineHeight: "16px" }}>
             基幹システムからダウンロードした「ゴンドラ商品マスター」と「棚割実績表」のCSVファイルを取り込みます。
           </div>
-          <CsvImportPanel onDataImport={onDataImport} />
+          <CsvImportPanel onDataImport={onDataImport} onGondolaSalesImport={onGondolaSalesImport} />
         </div>
       </div>
     </div>
@@ -855,7 +888,12 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
   const fileInputRef = useRef(null);
   const [dcsProposals, setDcsProposals] = useState(DCS_PROPOSALS);
   const [dragItem, setDragItem] = useState(null);
-  const [changeLog, setChangeLog] = useState([]);
+  const [changeLog, setChangeLog] = useState(() => {
+    try {
+      const saved = localStorage.getItem('james-operation-log');
+      return saved ? JSON.parse(saved).slice(0, 200) : [];
+    } catch { return []; }
+  });
   const [taskCompleted, setTaskCompleted] = useState(parentDcsTaskDone || {});
 
   // Load fixture data from bundled data when currentFixtureId changes
@@ -919,7 +957,32 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     addLog("やり直し (Redo)");
   };
 
-  const addLog = (msg) => setChangeLog(prev => [{ time: new Date().toLocaleTimeString("ja-JP"), msg }, ...prev].slice(0, 50));
+  // 構造化ログ: actionType = カット/復元/フェース変更/入替/移動/保存/エクスポート/Undo/Redo/その他
+  const addLog = (msg, extra = {}) => {
+    const entry = {
+      timestamp: new Date().toLocaleString("ja-JP"),
+      time: new Date().toLocaleTimeString("ja-JP"),
+      fixtureId: currentFixtureId || '',
+      actionType: extra.actionType || '操作',
+      jan: extra.jan || '',
+      productName: extra.productName || '',
+      before: extra.before || '',
+      after: extra.after || '',
+      detail: msg,
+      msg,
+    };
+    setChangeLog(prev => {
+      const next = [entry, ...prev].slice(0, 200);
+      // localStorage永続化
+      try {
+        const allLogs = JSON.parse(localStorage.getItem('james-operation-log') || '[]');
+        allLogs.unshift(entry);
+        if (allLogs.length > 500) allLogs.length = 500;
+        localStorage.setItem('james-operation-log', JSON.stringify(allLogs));
+      } catch (e) { /* ignore */ }
+      return next;
+    });
+  };
 
   // DCS指示サマリー集計
   const dcsCutCount = DCS_PROPOSALS.filter(d => d.action === "カット").length;
@@ -995,7 +1058,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     setProducts(prev => prev.filter(p => p.jan !== jan));
     setDeletedProducts(prev => [...prev, { ...prod, deletedAt: new Date().toLocaleString("ja-JP") }]);
     if (selectedProduct?.jan === jan) setSelectedProduct(null);
-    addLog(`${prod.name} を棚からカット`);
+    addLog(`${prod.name} を棚からカット`, { actionType: 'カット', jan: prod.jan, productName: prod.name, before: `F=${prod.face}`, after: '削除' });
   };
 
   // --- Restore deleted product ---
@@ -1005,7 +1068,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
     const { deletedAt, ...restored } = prod;
     setProducts(prev => [...prev, restored]);
     setDeletedProducts(prev => prev.filter(p => p.jan !== jan));
-    addLog(`${prod.name} を棚に復元`);
+    addLog(`${prod.name} を棚に復元`, { actionType: '復元', jan: prod.jan, productName: prod.name });
   };
 
   // --- DCS proposal approve/reject ---
@@ -1028,7 +1091,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       }
       return next;
     });
-    addLog(`DCS提案承認: ${proposal.action} ${proposal.jan}`);
+    addLog(`DCS提案承認: ${proposal.action} ${proposal.name || proposal.jan}`, { actionType: `DCS${proposal.action}`, jan: proposal.jan, productName: proposal.name });
   };
 
   const handleDcsReject = (proposal) => {
@@ -1041,7 +1104,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       }
       return next;
     });
-    addLog(`DCS提案却下: ${proposal.action} ${proposal.jan}`);
+    addLog(`DCS提案却下: ${proposal.action} ${proposal.name || proposal.jan}`, { actionType: 'DCS却下', jan: proposal.jan, productName: proposal.name });
   };
 
   // --- Drag & Drop (配列順序を実際に並び替え) ---
@@ -1066,7 +1129,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       }
       return arr;
     });
-    addLog(`${dragItem.name} → ${targetRow}段に移動`);
+    addLog(`${dragItem.name} → ${targetRow}段に移動`, { actionType: '段移動', jan: dragItem.jan, productName: dragItem.name, before: `${dragItem.row}段`, after: `${targetRow}段` });
     setDragItem(null);
   };
 
@@ -1147,7 +1210,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       }
       return p;
     }));
-    addLog(`${oldName} → ${newProduct.name} に入替え`);
+    addLog(`${oldName} → ${newProduct.name} に入替え`, { actionType: '商品入替', jan: selectedProduct.jan, productName: oldName, before: oldName, after: newProduct.name });
     setSelectedProduct(null);
     setShowSwapDialog(false);
   };
@@ -1188,7 +1251,7 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
       if (!window.confirm(`棚幅を超過します（${currentWidth + addWidth}mm / ${shelfMm}mm）。追加しますか？`)) return;
     }
     setProducts(prev => [...prev, newProduct]);
-    addLog(`${candidate.name} を ${row}段に追加`);
+    addLog(`${candidate.name} を ${row}段に追加`, { actionType: '商品追加', jan: candidate.jan, productName: candidate.name, after: `${row}段 F=1` });
     setAddProductRow(null);
   };
 
@@ -1382,6 +1445,54 @@ const ShelfViewScreen = ({ data, onBack, onHome, showDcs, onDcsProcessedChange, 
                     const csv = exportAllFixturesCSV(FIXTURES);
                     downloadCSV(csv, `james-all-fixtures-${new Date().toISOString().slice(0,10)}.csv`);
                     addLog("全ゴンドラCSVエクスポート完了");
+                    setShowSaveMenu(false);
+                  }},
+                  { label: "作業ログ出力", icon: "📝", fn: () => {
+                    const allLogs = (() => { try { return JSON.parse(localStorage.getItem('james-operation-log') || '[]'); } catch { return changeLog; } })();
+                    if (allLogs.length === 0) { alert("作業ログがありません"); return; }
+                    const csv = exportOperationLogCSV(allLogs);
+                    downloadCSV(csv, `james-operation-log-${new Date().toISOString().slice(0,10)}.csv`);
+                    addLog("作業ログCSV出力完了");
+                    setShowSaveMenu(false);
+                  }},
+                  { label: "変更データ出力", icon: "🔄", fn: () => {
+                    const origFixture = storeDataDefault.fixtures?.[currentFixtureId];
+                    const origProds = origFixture?.products || [];
+                    const origMap = {};
+                    origProds.forEach(p => { origMap[p.jan] = p; });
+                    const changes = [];
+                    // 削除
+                    deletedProducts.forEach(p => {
+                      changes.push({
+                        fixtureId: currentFixtureId, changeType: '削除', jan: p.jan, productName: p.name,
+                        categoryName: p.categoryName || '', oldFace: p.face, newFace: 0,
+                        price: p.price, dailyAvgQty: p.dailyAvgQty || 0, salesQty: p.salesQty || 0,
+                        timestamp: p.deletedAt || ''
+                      });
+                    });
+                    // フェース変更・段移動
+                    products.forEach(p => {
+                      const orig = origMap[p.jan];
+                      if (!orig) {
+                        changes.push({
+                          fixtureId: currentFixtureId, changeType: '追加', jan: p.jan, productName: p.name,
+                          categoryName: p.categoryName || '', oldFace: 0, newFace: p.face,
+                          price: p.price, dailyAvgQty: p.dailyAvgQty || 0, salesQty: p.salesQty || 0,
+                          timestamp: ''
+                        });
+                      } else if (orig.face !== p.face) {
+                        changes.push({
+                          fixtureId: currentFixtureId, changeType: 'フェース変更', jan: p.jan, productName: p.name,
+                          categoryName: p.categoryName || '', oldFace: orig.face, newFace: p.face,
+                          price: p.price, dailyAvgQty: p.dailyAvgQty || 0, salesQty: p.salesQty || 0,
+                          timestamp: ''
+                        });
+                      }
+                    });
+                    if (changes.length === 0) { alert("変更データがありません"); return; }
+                    const csv = exportChangeSummaryCSV(changes);
+                    downloadCSV(csv, `james-changes-${currentFixtureId}-${new Date().toISOString().slice(0,10)}.csv`);
+                    addLog("変更データCSV出力完了");
                     setShowSaveMenu(false);
                   }},
                 ].map((item, i) => (
@@ -2666,6 +2777,39 @@ export default function App() {
     setScreen("portal");
   }, []);
 
+  // ゴンドラ別売上CSVインポート → 既存FIXTURESにゴンドラ別売上データをマージ
+  const handleGondolaSalesImport = useCallback((salesData) => {
+    // Update store info
+    STORE_INFO = {
+      ...STORE_INFO,
+      company: salesData.company || STORE_INFO.company,
+      storeName: salesData.storeName || STORE_INFO.storeName,
+      periodFrom: salesData.periodFrom || STORE_INFO.periodFrom,
+      periodTo: salesData.periodTo || STORE_INFO.periodTo,
+      periodDays: salesData.periodDays || STORE_INFO.periodDays,
+    };
+    // Merge gondola-level sales into existing fixtures
+    const gondolaSales = salesData.gondolaSales || {};
+    for (const [fixtureId, fixture] of Object.entries(FIXTURES)) {
+      const gs = gondolaSales[fixtureId];
+      if (gs) {
+        fixture.gondolaTotalSales = gs.totalSales;
+        fixture.gondolaRegularSales = gs.regularSales;
+        fixture.gondolaTotalProfit = gs.totalProfit;
+        fixture.gondolaRegularProfit = gs.regularProfit;
+        fixture.salesPer10cm = gs.salesPer10cm;
+        fixture.gondolaName = gs.gondolaName;
+      }
+    }
+    // Re-run DCS engine with updated period
+    runDcsEngine(FIXTURES, parseInt(STORE_INFO.periodDays) || 49);
+    // Save to localStorage
+    try {
+      localStorage.setItem('james-gondola-sales', JSON.stringify(salesData));
+    } catch (e) { console.warn('Failed to save gondola sales:', e); }
+    setScreen("portal");
+  }, []);
+
   // Show loading screen while data is loading
   if (loading) {
     return (
@@ -2724,7 +2868,7 @@ export default function App() {
 
   const content = (() => {
     if (screen === "portal") {
-      return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onDataImport={handleDataImport} onNavigate={(s) => {
+      return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onDataImport={handleDataImport} onGondolaSalesImport={handleGondolaSalesImport} onNavigate={(s) => {
         if (s === "category-select-dcs") { setShowDcs(true); setScreen("category-select"); }
         else { setShowDcs(false); setScreen(s); }
       }} />;
@@ -2739,7 +2883,7 @@ export default function App() {
       return <ShelfViewScreen data={{ departmentKey: selectedDepartment }} onBack={() => setScreen("category-select")} onHome={() => setScreen("portal")} showDcs={showDcs}
         onDcsProcessedChange={setDcsProcessed} onDcsTaskDoneChange={setDcsTaskDone} dcsTaskDone={dcsTaskDone} />;
     }
-    return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onDataImport={handleDataImport} onNavigate={() => {}} />;
+    return <PortalScreen userName="店長 佐々木" dcsProcessed={dcsProcessed} dcsTaskDone={dcsTaskDone} onDataImport={handleDataImport} onGondolaSalesImport={handleGondolaSalesImport} onNavigate={() => {}} />;
   })();
 
   return (
